@@ -1,0 +1,117 @@
+"""Search tool using Steel.dev API."""
+
+from __future__ import annotations
+
+import os
+from typing import TYPE_CHECKING, Literal, NotRequired, TypedDict
+
+from pydantic import BaseModel
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from datetime import datetime
+
+
+class ScrapeResult(BaseModel):
+    """Result from a web scrape operation."""
+
+    content: dict[str, str | None]  # Different content formats
+    links: list[dict[str, str]]  # Links found in the page
+    metadata: dict[str, str | int | datetime | None]  # Page metadata
+    pdf_url: str | None = None  # Optional PDF URL
+    screenshot_url: str | None = None  # Optional screenshot URL
+
+
+class SteelConfig(TypedDict):
+    """Configuration for Steel client."""
+
+    api_key: str
+    delay: NotRequired[float]  # Delay in milliseconds
+    use_proxy: NotRequired[bool]  # Use residential proxy
+
+
+class AsyncSteelClient:
+    """Async client for Steel.dev API."""
+
+    def __init__(
+        self,
+        *,
+        api_key: str | None = None,
+        base_url: str = "https://api.steel.dev",
+    ):
+        """Initialize Steel client.
+
+        Args:
+            api_key: Steel API key. Defaults to STEEL_API_KEY env var.
+            base_url: Base URL for Steel API.
+        """
+        self.api_key = api_key or os.getenv("STEEL_API_KEY")
+        if not self.api_key:
+            msg = "No API key provided. Set STEEL_API_KEY env var or pass api_key"
+            raise ValueError(msg)
+
+        self.base_url = base_url
+
+    async def pdf(
+        self,
+        url: str,
+        *,
+        delay: float | None = None,
+        use_proxy: bool = False,
+    ) -> str:
+        """Generate PDF from webpage.
+
+        Args:
+            url: URL to generate PDF from
+            delay: Delay in milliseconds before generating
+            use_proxy: Use residential proxy
+
+        Returns:
+            URL where the PDF is hosted
+        """
+
+    async def screenshot(
+        self,
+        url: str,
+        *,
+        delay: float | None = None,
+        full_page: bool = False,
+        use_proxy: bool = False,
+    ) -> str:
+        """Capture screenshot of webpage.
+
+        Args:
+            url: URL to screenshot
+            delay: Delay in milliseconds before capture
+            full_page: Capture full page height
+            use_proxy: Use residential proxy
+
+        Returns:
+            URL where screenshot is hosted
+        """
+
+    async def scrape(
+        self,
+        url: str,
+        *,
+        delay: float | None = None,
+        formats: Sequence[Literal["html", "readability", "cleaned_html", "markdown"]]
+        | None = None,
+        include_pdf: bool = False,
+        include_screenshot: bool = False,
+        use_proxy: bool = False,
+    ) -> ScrapeResult:
+        """Scrape webpage content.
+
+        Args:
+            url: URL to scrape
+            delay: Delay in milliseconds before scraping
+            formats: Content formats to return
+            include_pdf: Include PDF in response
+            include_screenshot: Include screenshot in response
+            use_proxy: Use residential proxy
+
+        Returns:
+            Scraped content and metadata
+        """
