@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import json
 import os
 from typing import TYPE_CHECKING, Literal
 
@@ -14,36 +13,14 @@ from searchly.exceptions import (
     MissingAPIKeyError,
     UsageLimitExceededError,
 )
+from searchly.utils import get_max_items_from_list
 
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-DEFAULT_MODEL_ENCODING = "gpt-3.5-turbo"
-DEFAULT_MAX_TOKENS = 4000
-
-
-def get_total_tokens_from_string(string: str, model: str = DEFAULT_MODEL_ENCODING) -> int:
-    """Get total amount of tokens from string using the specified encoding."""
-    import tokonomics
-
-    return tokonomics.count_tokens(string, model=model)
-
-
-def get_max_items_from_list(
-    data: Sequence[dict], max_tokens: int = DEFAULT_MAX_TOKENS
-) -> list[dict[str, str]]:
-    """Get max items from list of items based on defined max tokens."""
-    result = []
-    current_tokens = 0
-    for item in data:
-        item_str = json.dumps(item)
-        new_total_tokens = current_tokens + get_total_tokens_from_string(item_str)
-        if new_total_tokens > max_tokens:
-            break
-        result.append(item)
-        current_tokens = new_total_tokens
-    return result
+SearchDepth = Literal["basic", "advanced"]
+Topic = Literal["general", "news"]
 
 
 class AsyncTavilyClient:
@@ -78,8 +55,8 @@ class AsyncTavilyClient:
     async def _search(
         self,
         query: str,
-        search_depth: Literal["basic", "advanced"] = "basic",
-        topic: str = "general",
+        search_depth: SearchDepth = "basic",
+        topic: Topic = "general",
         days: int = 3,
         max_results: int = 5,
         include_domains: Sequence[str] | None = None,
@@ -90,6 +67,8 @@ class AsyncTavilyClient:
         **kwargs,
     ) -> dict:
         """Internal search method to send the request to the API."""
+        import anyenv
+
         data = {
             "query": query,
             "search_depth": search_depth,
@@ -107,7 +86,7 @@ class AsyncTavilyClient:
             data.update(kwargs)
 
         async with self._client_creator() as client:
-            response = await client.post("/search", content=json.dumps(data))
+            response = await client.post("/search", content=anyenv.dump_json(data))
 
         if response.status_code == 200:  # noqa: PLR2004
             return response.json()
@@ -125,8 +104,8 @@ class AsyncTavilyClient:
     async def search(
         self,
         query: str,
-        search_depth: Literal["basic", "advanced"] = "basic",
-        topic: Literal["general", "news"] = "general",
+        search_depth: SearchDepth = "basic",
+        topic: Topic = "general",
         days: int = 3,
         max_results: int = 5,
         include_domains: Sequence[str] | None = None,
@@ -151,22 +130,20 @@ class AsyncTavilyClient:
             **kwargs,
         )
 
-        tavily_results = response_dict.get("results", [])
-
-        response_dict["results"] = tavily_results
+        response_dict["results"] = response_dict.get("results", [])
 
         return response_dict
 
     async def _extract(self, urls: list[str] | str, **kwargs) -> dict:
         """Internal extract method to send the request to the API."""
-        data = {
-            "urls": urls,
-        }
+        import anyenv
+
+        data = {"urls": urls}
         if kwargs:
             data.update(kwargs)
 
         async with self._client_creator() as client:
-            response = await client.post("/extract", content=json.dumps(data))
+            response = await client.post("/extract", content=anyenv.dump_json(data))
 
         if response.status_code == 200:  # noqa: PLR2004
             return response.json()
@@ -192,24 +169,16 @@ class AsyncTavilyClient:
         **kwargs,  # Accept custom arguments
     ) -> dict:
         """Combined extract method."""
-        response_dict = await self._extract(
-            urls,
-            **kwargs,
-        )
-
-        tavily_results = response_dict.get("results", [])
-        failed_results = response_dict.get("failed_results", [])
-
-        response_dict["results"] = tavily_results
-        response_dict["failed_results"] = failed_results
-
+        response_dict = await self._extract(urls, **kwargs)
+        response_dict["results"] = response_dict.get("results", [])
+        response_dict["failed_results"] = response_dict.get("failed_results", [])
         return response_dict
 
     async def get_search_context(
         self,
         query: str,
-        search_depth: Literal["basic", "advanced"] = "basic",
-        topic: Literal["general", "news"] = "general",
+        search_depth: SearchDepth = "basic",
+        topic: Topic = "general",
         days: int = 3,
         max_results: int = 5,
         include_domains: Sequence[str] | None = None,
@@ -227,6 +196,8 @@ class AsyncTavilyClient:
 
         Returns a string of JSON containing the search context up to context limit.
         """
+        import anyenv
+
         response_dict = await self._search(
             query,
             search_depth=search_depth,
@@ -241,16 +212,15 @@ class AsyncTavilyClient:
             **kwargs,
         )
         sources = response_dict.get("results", [])
-        context = [
-            {"url": source["url"], "content": source["content"]} for source in sources
-        ]
-        return json.dumps(get_max_items_from_list(context, max_tokens))
+        context = [{"url": s["url"], "content": s["content"]} for s in sources]
+        items = get_max_items_from_list(context, max_tokens)
+        return anyenv.dump_json(items)
 
     async def qna_search(
         self,
         query: str,
-        search_depth: Literal["basic", "advanced"] = "advanced",
-        topic: Literal["general", "news"] = "general",
+        search_depth: SearchDepth = "advanced",
+        topic: Topic = "general",
         days: int = 3,
         max_results: int = 5,
         include_domains: Sequence[str] | None = None,
@@ -273,44 +243,14 @@ class AsyncTavilyClient:
         )
         return response_dict.get("answer", "")
 
-    async def get_company_info(
-        self,
-        query: str,
-        search_depth: Literal["basic", "advanced"] = "advanced",
-        max_results: int = 5,
-    ) -> Sequence[dict]:
-        """Company information search method.
-
-        Search depth is advanced by default to get the best answer.
-        """
-
-        async def _perform_search(topic: str):
-            return await self._search(
-                query,
-                search_depth=search_depth,
-                topic=topic,
-                max_results=max_results,
-                include_answer=False,
-            )
-
-        all_results = []
-        for data in await asyncio.gather(*[
-            _perform_search(topic) for topic in self._company_info_tags
-        ]):
-            if "results" in data:
-                all_results.extend(data["results"])
-
-        return sorted(all_results, key=lambda x: x["score"], reverse=True)[:max_results]
-
-
-async def example():
-    """Example usage of SerperTool."""
-    client = AsyncTavilyClient()
-    results = await client.search("Python programming")
-    print(results)
-
 
 if __name__ == "__main__":
     import asyncio
+
+    async def example():
+        """Example usage of SerperTool."""
+        client = AsyncTavilyClient()
+        results = await client.search("Python programming")
+        print(results)
 
     asyncio.run(example())

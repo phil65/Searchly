@@ -4,9 +4,14 @@ from __future__ import annotations
 
 import base64
 import os
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
+
+
+OSType = Literal["windows", "macos", "android", "ios"]
+DeviceType = Literal["desktop", "mobile", "tablet"]
+SearchType = Literal["organic", "news"]
 
 
 class SearchItem(BaseModel):
@@ -82,11 +87,11 @@ class AsyncDataForSEOClient:
         self,
         query: str,
         *,
-        search_type: Literal["organic", "news"] = "organic",
+        search_type: SearchType = "organic",
         country_code: int | None = None,
         language_code: str | None = None,
-        device: Literal["desktop", "mobile", "tablet"] = "desktop",
-        os: Literal["windows", "macos", "android", "ios"] = "windows",
+        device: DeviceType = "desktop",
+        os: OSType = "windows",
         depth: int = 100,
     ) -> SearchResponse:
         """Execute search query using DataForSEO API.
@@ -133,18 +138,11 @@ class AsyncDataForSEOClient:
             raise ValueError(msg)
 
         task = data["tasks"][0]
-        if TYPE_CHECKING:
-            assert isinstance(task, dict)
-
         results = []
         if result := task.get("result"):
-            if TYPE_CHECKING:
-                assert isinstance(result, list)
             for item in result[0].get("items", []):
-                if TYPE_CHECKING:
-                    assert isinstance(item, dict)
                 if item.get("type") in {"organic", "featured_snippet"}:
-                    results.append(SearchItem(**item))
+                    results.append(SearchItem(**item))  # noqa: PERF401
 
         return SearchResponse(
             status_code=data["status_code"],
@@ -154,12 +152,7 @@ class AsyncDataForSEOClient:
             results=results,
         )
 
-    async def get_screenshot(
-        self,
-        task_id: str,
-        *,
-        scale_factor: float = 1.0,
-    ) -> str:
+    async def get_screenshot(self, task_id: str, *, scale_factor: float = 1.0) -> str:
         """Get screenshot for a specific search result.
 
         Args:
@@ -180,13 +173,7 @@ class AsyncDataForSEOClient:
             raise ValueError(msg)
 
         endpoint = "/serp/screenshot"
-        payload = [
-            {
-                "task_id": task_id,
-                "browser_screen_scale_factor": scale_factor,
-            }
-        ]
-
+        payload = [{"task_id": task_id, "browser_screen_scale_factor": scale_factor}]
         url = f"{self.base_url}{endpoint}"
         data = await anyenv.post_json(
             url,

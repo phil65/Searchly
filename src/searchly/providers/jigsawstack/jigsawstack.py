@@ -8,6 +8,9 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
+SafeSearchSetting = Literal["moderate", "strict", "off"]
+
+
 class SearchResult(BaseModel):
     """Individual search result."""
 
@@ -57,17 +60,14 @@ class AsyncJigsawStackClient:
             raise ValueError(msg)
 
         self.base_url = base_url
-        self.headers = {
-            "Content-Type": "application/json",
-            "x-api-key": self.api_key,
-        }
+        self.headers = {"Content-Type": "application/json", "x-api-key": self.api_key}
 
     async def search(
         self,
         query: str,
         *,
         ai_overview: bool = True,
-        safe_search: Literal["moderate", "strict", "off"] = "moderate",
+        safe_search: SafeSearchSetting = "moderate",
         spell_check: bool = True,
         urls: list[str] | None = None,
     ) -> SearchResponse:
@@ -95,10 +95,8 @@ class AsyncJigsawStackClient:
 
         if urls:
             payload["byo_urls"] = urls
-
-        url = f"{self.base_url}/web/search"
         data = await anyenv.post_json(
-            url,
+            f"{self.base_url}/web/search",
             payload,
             headers=self.headers,
             return_type=dict,

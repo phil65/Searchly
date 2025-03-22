@@ -8,6 +8,9 @@ from typing import Any, Literal
 from pydantic import BaseModel
 
 
+SearchType = Literal["search", "news", "images", "videos"]
+
+
 class SearchResult(BaseModel):
     """Individual search result."""
 
@@ -51,7 +54,7 @@ class AsyncSerpAPIClient:
         self,
         query: str,
         *,
-        search_type: Literal["search", "news", "images", "videos"] = "search",
+        search_type: SearchType = "search",
         country: str | None = None,
         language: str | None = None,
         location: str | None = None,

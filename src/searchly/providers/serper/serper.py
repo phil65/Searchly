@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-import datetime
 import logging
 import os
 from typing import Any, Literal
 
+from searchly.utils import save_results_to_file
+
 
 logger = logging.getLogger(__name__)
+
+DateRange = Literal["d", "w", "m", "y"]
 
 
 class SerperTool:
@@ -47,7 +50,7 @@ class SerperTool:
         location: str | None = None,
         country: str | None = None,
         language: str | None = None,
-        date_range: Literal["d", "w", "m", "y"] | None = None,
+        date_range: DateRange | None = None,
     ) -> str | dict[str, Any]:
         """Search the web using Serper.dev API.
 
@@ -80,23 +83,19 @@ class SerperTool:
         if date_range:
             payload["tbs"] = f"qdr:{date_range}"
 
-        # Make API request
-        search_url = f"{self.base_url}/{search_type}"
         assert self.api_key, "API key is required"
-        headers = {"X-API-KEY": self.api_key, "Content-Type": "application/json"}
-
         results = await anyenv.post_json(
-            search_url, headers=headers, json_data=payload, return_type=dict
+            f"{self.base_url}/{search_type}",
+            headers={"X-API-KEY": self.api_key, "Content-Type": "application/json"},
+            json_data=payload,
+            return_type=dict,
         )
 
         # Process results
         processed_results = self._process_results(results, search_type)
-
-        # Save to file if requested
         if self.save_results:
-            self._save_results_to_file(processed_results)
+            save_results_to_file(processed_results)
 
-        # Convert to markdown
         return self._format_as_markdown(processed_results, query, search_type)
 
     def _process_results(self, results: dict, search_type: str) -> dict[str, Any]:
@@ -275,41 +274,18 @@ class SerperTool:
         elif search_type == "news" and "news" in results:
             result_count = len(results["news"])
 
-        # Add the footer
         md_parts.append(f"\n---\n*Search type: {search_type} | Results: {result_count}*")
 
         return "\n".join(md_parts)
 
-    def _save_results_to_file(self, results: dict):
-        """Save results to a file with timestamp in filename.
-
-        Args:
-            results: Processed results to save
-        """
-        import anyenv
-        import upath
-
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = upath.UPath(f"search_results_{timestamp}.json")
-
-        try:
-            with filename.open("w", encoding="utf-8") as file:
-                text = anyenv.dump_json(results, indent=True)
-                file.write(text)
-            logger.info("Results saved to %r", filename)
-        except OSError as e:
-            error_msg = f"Failed to save results to file: {e}"
-            logger.exception(error_msg)
-
-
-async def example():
-    """Example usage of SerperTool."""
-    tool = SerperTool()
-    results = await tool.search("Python programming")
-    print(results)
-
 
 if __name__ == "__main__":
     import asyncio
+
+    async def example():
+        """Example usage of SerperTool."""
+        tool = SerperTool()
+        results = await tool.search("Python programming")
+        print(results)
 
     asyncio.run(example())
