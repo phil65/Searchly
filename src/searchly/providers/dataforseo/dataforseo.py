@@ -11,7 +11,6 @@ from pydantic import BaseModel, ConfigDict
 
 OSType = Literal["windows", "macos", "android", "ios"]
 DeviceType = Literal["desktop", "mobile", "tablet"]
-SearchType = Literal["organic", "news"]
 
 
 class SearchItem(BaseModel):
@@ -87,18 +86,16 @@ class AsyncDataForSEOClient:
         self,
         query: str,
         *,
-        search_type: SearchType = "organic",
         country_code: int | None = None,
         language_code: str | None = None,
         device: DeviceType = "desktop",
         os: OSType = "windows",
         depth: int = 100,
     ) -> SearchResponse:
-        """Execute search query using DataForSEO API.
+        """Execute organic search query using DataForSEO API.
 
         Args:
             query: Search query string
-            search_type: Type of search results
             country_code: Location code (e.g. 2826 for UK)
             language_code: Language code (e.g. 'en')
             device: Device type for results
@@ -113,7 +110,73 @@ class AsyncDataForSEOClient:
         """
         import anyenv
 
-        endpoint = f"/serp/google/{search_type}/live/advanced"
+        endpoint = "/serp/google/organic/live/advanced"
+        payload = [
+            {
+                "keyword": query,
+                "location_code": country_code,
+                "language_code": language_code,
+                "device": device,
+                "os": os,
+                "depth": min(depth, 100),
+            }
+        ]
+        url = f"{self.base_url}{endpoint}"
+        data = await anyenv.post_json(
+            url,
+            payload,
+            headers=self.headers,
+            return_type=dict,
+        )
+
+        if not data.get("tasks", []):
+            msg = "No results found in response"
+            raise ValueError(msg)
+
+        task = data["tasks"][0]
+        results = []
+        if result := task.get("result"):
+            for item in result[0].get("items", []):
+                if item.get("type") in {"organic", "featured_snippet"}:
+                    results.append(SearchItem(**item))  # noqa: PERF401
+
+        return SearchResponse(
+            status_code=data["status_code"],
+            status_message=data["status_message"],
+            cost=data.get("cost", 0.0),
+            time=data.get("time", ""),
+            results=results,
+        )
+
+    async def search_news(
+        self,
+        query: str,
+        *,
+        country_code: int | None = None,
+        language_code: str | None = None,
+        device: DeviceType = "desktop",
+        os: OSType = "windows",
+        depth: int = 100,
+    ) -> SearchResponse:
+        """Execute news search query using DataForSEO API.
+
+        Args:
+            query: Search query string
+            country_code: Location code (e.g. 2826 for UK)
+            language_code: Language code (e.g. 'en')
+            device: Device type for results
+            os: Operating system for results
+            depth: Number of results to return (max 100)
+
+        Returns:
+            News search results with metadata
+
+        Raises:
+            httpx.HTTPError: If API request fails
+        """
+        import anyenv
+
+        endpoint = "/serp/google/news/live/advanced"
         payload = [
             {
                 "keyword": query,
@@ -141,8 +204,9 @@ class AsyncDataForSEOClient:
         results = []
         if result := task.get("result"):
             for item in result[0].get("items", []):
-                if item.get("type") in {"organic", "featured_snippet"}:
-                    results.append(SearchItem(**item))  # noqa: PERF401
+                # For news results, we might want to filter differently
+                # but for now we'll keep it similar to the original
+                results.append(SearchItem(**item))  # noqa: PERF401
 
         return SearchResponse(
             status_code=data["status_code"],
