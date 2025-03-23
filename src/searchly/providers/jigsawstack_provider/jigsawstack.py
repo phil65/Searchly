@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 SafeSearchSetting = Literal["moderate", "strict", "off"]
@@ -26,17 +26,6 @@ class SearchResult(BaseModel):
     favicon: str | None = None
     thumbnail: str | None = None
     snippets: list[str] | None = None
-
-
-class SearchResponse(BaseModel):
-    """JigsawStack search response."""
-
-    success: bool
-    query: str
-    ai_overview: str | None = None
-    is_safe: bool
-    image_urls: list[str] = Field(default_factory=list)
-    results: list[SearchResult]
 
 
 class AsyncJigsawStackClient:
@@ -70,7 +59,7 @@ class AsyncJigsawStackClient:
         safe_search: SafeSearchSetting = "moderate",
         spell_check: bool = True,
         urls: list[str] | None = None,
-    ) -> SearchResponse:
+    ) -> list[SearchResult]:
         """Execute search query using JigsawStack API.
 
         Args:
@@ -102,20 +91,16 @@ class AsyncJigsawStackClient:
             return_type=dict,
         )
 
-        return SearchResponse(**data)
-
-
-async def example():
-    """Example usage of AsyncJigsawStackClient."""
-    client = AsyncJigsawStackClient()
-    results = await client.search(
-        "What is the capital of France?",
-        safe_search="strict",
-    )
-    print(results)
+        return [SearchResult(**i) for i in data["results"]]
 
 
 if __name__ == "__main__":
     import anyenv
+
+    async def example():
+        """Example usage of AsyncJigsawStackClient."""
+        client = AsyncJigsawStackClient()
+        results = await client.search("What is the capital of France?")
+        print(results)
 
     anyenv.run_sync(example())

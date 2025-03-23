@@ -8,6 +8,9 @@ from typing import Any, Literal, TypedDict
 from pydantic import BaseModel, Field
 
 
+SearchMode = Literal["basic", "detailed"]
+
+
 class SearchResult(BaseModel):
     """Individual search result."""
 
@@ -36,11 +39,7 @@ class SummaryOptions(TypedDict, total=False):
 class AsyncExaClient:
     """Async client for Exa API."""
 
-    def __init__(
-        self,
-        *,
-        api_key: str | None = None,
-    ):
+    def __init__(self, *, api_key: str | None = None):
         """Initialize Exa client.
 
         Args:
@@ -63,7 +62,7 @@ class AsyncExaClient:
         self,
         query: str,
         *,
-        mode: Literal["basic", "detailed"] = "basic",
+        mode: SearchMode = "basic",
         num_results: int = 10,
         include_domains: list[str] | None = None,
         exclude_domains: list[str] | None = None,
