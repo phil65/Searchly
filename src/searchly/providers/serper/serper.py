@@ -12,6 +12,7 @@ from searchly.utils import save_results_to_file
 logger = logging.getLogger(__name__)
 
 DateRange = Literal["d", "w", "m", "y"]
+SearchType = Literal["search", "news"]
 
 
 class SerperTool:
@@ -33,7 +34,7 @@ class SerperTool:
             n_results: Number of results to return
             save_results: Whether to save results to file
         """
-        self.api_key = api_key or os.environ.get("SERPER_API_KEY")
+        self.api_key = api_key or os.environ.get("SERPER_API_KEY") or ""
         if not self.api_key:
             error_msg = "SERPER_API_KEY not found in environment variables"
             raise ValueError(error_msg)
@@ -46,7 +47,7 @@ class SerperTool:
         self,
         query: str,
         *,
-        search_type: Literal["search", "news"] = "search",
+        search_type: SearchType = "search",
         location: str | None = None,
         country: str | None = None,
         language: str | None = None,

@@ -8,6 +8,9 @@ from typing import Any, Literal
 from pydantic import BaseModel
 
 
+TimeRange = Literal["day", "week", "month", "year"]
+
+
 class SearchResult(BaseModel):
     """Individual search result."""
 
@@ -71,7 +74,7 @@ class AsyncSearch1API:
         include_sites: list[str] | None = None,
         exclude_sites: list[str] | None = None,
         language: str | None = None,
-        time_range: Literal["day", "week", "month", "year"] | None = None,
+        time_range: TimeRange | None = None,
     ) -> Search1APIResponse:
         """Execute search query.
 
