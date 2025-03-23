@@ -16,6 +16,8 @@ if TYPE_CHECKING:
         WebSearchApiResponse,
     )
 
+SearchType = Literal["web", "images", "news", "videos"]
+
 
 class AsyncBraveSearch:
     """Async wrapper for Brave Search API."""
@@ -47,7 +49,7 @@ class AsyncBraveSearch:
         self,
         query: str,
         *,
-        search_type: Literal["web", "images", "news", "videos"] = "web",
+        search_type: SearchType = "web",
         country: str | None = None,
         language: str | None = None,
     ) -> (

@@ -76,7 +76,6 @@ Discussions = "https://github.com/phil65/searchly/discussions"
 [project.optional-dependencies]
 exa = ["exa-py"]
 brave_search_python_client = ["brave-search-python-client"]
-serpapi = ["serpapi"]
 
 [tool.pytest.ini_options]
 testpaths = "tests/"
