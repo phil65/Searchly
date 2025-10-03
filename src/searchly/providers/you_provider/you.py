@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -112,7 +112,7 @@ class AsyncYouClient:
             msg = "offset must be between 0 and 9"
             raise ValueError(msg)
 
-        params = {
+        params: dict[str, Any] = {
             "query": query,
             "num_web_results": num_results,
             "offset": offset,

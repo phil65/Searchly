@@ -100,7 +100,7 @@ class AsyncSerpAPIClient:
         import anyenv
 
         # Build search parameters
-        params = {
+        params: dict[str, Any] = {
             "q": query,
             "num": max_results,
             "engine": "google",
@@ -177,7 +177,7 @@ class AsyncSerpAPIClient:
         import anyenv
 
         # Build search parameters
-        params = {
+        params: dict[str, Any] = {
             "q": query,
             "tbm": "nws",  # Set to news search
             "num": max_results,
