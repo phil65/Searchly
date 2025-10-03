@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 from typing import Any, Literal, TypedDict
 
@@ -95,6 +96,7 @@ class AsyncExaClient:
         # Convert sync to async for consistency with other providers
         loop = asyncio.get_event_loop()
 
+        results: Any
         if mode == "basic":
             # Use highlights mode
             results = await loop.run_in_executor(
