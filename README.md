@@ -2,8 +2,6 @@
 
 [![PyPI License](https://img.shields.io/pypi/l/searchly.svg)](https://pypi.org/project/searchly/)
 [![Package status](https://img.shields.io/pypi/status/searchly.svg)](https://pypi.org/project/searchly/)
-[![Daily downloads](https://img.shields.io/pypi/dd/searchly.svg)](https://pypi.org/project/searchly/)
-[![Weekly downloads](https://img.shields.io/pypi/dw/searchly.svg)](https://pypi.org/project/searchly/)
 [![Monthly downloads](https://img.shields.io/pypi/dm/searchly.svg)](https://pypi.org/project/searchly/)
 [![Distribution format](https://img.shields.io/pypi/format/searchly.svg)](https://pypi.org/project/searchly/)
 [![Wheel availability](https://img.shields.io/pypi/wheel/searchly.svg)](https://pypi.org/project/searchly/)
@@ -21,12 +19,8 @@
 [![Github last commit](https://img.shields.io/github/last-commit/phil65/searchly)](https://github.com/phil65/searchly/commits)
 [![Github release date](https://img.shields.io/github/release-date/phil65/searchly)](https://github.com/phil65/searchly/releases)
 [![Github language count](https://img.shields.io/github/languages/count/phil65/searchly)](https://github.com/phil65/searchly)
-[![Github commits this week](https://img.shields.io/github/commit-activity/w/phil65/searchly)](https://github.com/phil65/searchly)
 [![Github commits this month](https://img.shields.io/github/commit-activity/m/phil65/searchly)](https://github.com/phil65/searchly)
-[![Github commits this year](https://img.shields.io/github/commit-activity/y/phil65/searchly)](https://github.com/phil65/searchly)
 [![Package status](https://codecov.io/gh/phil65/searchly/branch/main/graph/badge.svg)](https://codecov.io/gh/phil65/searchly/)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![PyUp](https://pyup.io/repos/github/phil65/searchly/shield.svg)](https://pyup.io/repos/github/phil65/searchly/)
 
 [Read the documentation!](https://phil65.github.io/searchly/)
-
