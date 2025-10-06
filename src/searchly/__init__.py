@@ -1,4 +1,7 @@
-__version__ = "0.0.1"
+from __future__ import annotations
 
+from importlib.metadata import version
+
+__version__ = version("searchly")
 
 __all__: list[str] = []
