@@ -175,9 +175,7 @@ class SerperTool:
 
         return processed
 
-    def _format_as_markdown(
-        self, results: dict[str, Any], query: str, search_type: str
-    ) -> str:
+    def _format_as_markdown(self, results: dict[str, Any], query: str, search_type: str) -> str:
         """Format search results as markdown text.
 
         Args:
