@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import ConfigDict, Field, SecretStr
@@ -29,6 +30,14 @@ class BaseSearchProviderConfig(Schema):
     """Search provider type."""
 
     model_config = ConfigDict(use_attribute_docstrings=True, extra="forbid")
+
+    def is_configured(self) -> bool:
+        """Check if the provider has required credentials configured.
+
+        Returns:
+            True if credentials are set via field or environment variable.
+        """
+        raise NotImplementedError
 
 
 class BraveSearchConfig(BaseSearchProviderConfig):
@@ -62,6 +71,10 @@ class BraveSearchConfig(BaseSearchProviderConfig):
         examples=[1, 2, 5],
     )
     """Time to wait between retries in seconds."""
+
+    def is_configured(self) -> bool:
+        """Check if Brave Search credentials are configured."""
+        return self.api_key is not None or os.getenv("BRAVE_API_KEY") is not None
 
     def get_provider(self) -> AsyncBraveSearch:
         """Create Brave Search provider instance."""
@@ -104,6 +117,12 @@ class DataForSEOConfig(BaseSearchProviderConfig):
     )
     """Base URL for the API."""
 
+    def is_configured(self) -> bool:
+        """Check if DataForSEO credentials are configured."""
+        has_login = self.login is not None or os.getenv("DATAFORSEO_LOGIN") is not None
+        has_password = self.password is not None or os.getenv("DATAFORSEO_PASSWORD") is not None
+        return has_login and has_password
+
     def get_provider(self) -> AsyncDataForSEOClient:
         """Create DataForSEO provider instance."""
         from searchly.providers.dataforseo_provider.dataforseo import AsyncDataForSEOClient
@@ -132,6 +151,10 @@ class ExaConfig(BaseSearchProviderConfig):
         description="Exa API key. Defaults to EXA_API_KEY env var.",
     )
     """Exa API key."""
+
+    def is_configured(self) -> bool:
+        """Check if Exa credentials are configured."""
+        return self.api_key is not None or os.getenv("EXA_API_KEY") is not None
 
     def get_provider(self) -> AsyncExaClient:
         """Create Exa provider instance."""
@@ -163,6 +186,10 @@ class JigsawStackConfig(BaseSearchProviderConfig):
     )
     """Base URL for the API."""
 
+    def is_configured(self) -> bool:
+        """Check if JigsawStack credentials are configured."""
+        return self.api_key is not None or os.getenv("JIGSAWSTACK_API_KEY") is not None
+
     def get_provider(self) -> AsyncJigsawStackClient:
         """Create JigsawStack provider instance."""
         from searchly.providers.jigsawstack_provider.jigsawstack import AsyncJigsawStackClient
@@ -192,6 +219,10 @@ class KagiConfig(BaseSearchProviderConfig):
         title="Base URL",
     )
     """Base URL for the API."""
+
+    def is_configured(self) -> bool:
+        """Check if Kagi credentials are configured."""
+        return self.api_key is not None or os.getenv("KAGI_API_KEY") is not None
 
     def get_provider(self) -> AsyncKagiClient:
         """Create Kagi provider instance."""
@@ -223,6 +254,10 @@ class LinkUpConfig(BaseSearchProviderConfig):
     )
     """Base URL for the API."""
 
+    def is_configured(self) -> bool:
+        """Check if LinkUp credentials are configured."""
+        return self.api_key is not None or os.getenv("LINKUP_API_KEY") is not None
+
     def get_provider(self) -> AsyncLinkUpClient:
         """Create LinkUp provider instance."""
         from searchly.providers.linkup_provider.client import AsyncLinkUpClient
@@ -253,6 +288,10 @@ class Search1Config(BaseSearchProviderConfig):
     )
     """Base URL for the API."""
 
+    def is_configured(self) -> bool:
+        """Check if Search1API credentials are configured."""
+        return self.api_key is not None or os.getenv("SEARCH1API_KEY") is not None
+
     def get_provider(self) -> AsyncSearch1API:
         """Create Search1API provider instance."""
         from searchly.providers.search1_provider.client import AsyncSearch1API
@@ -276,6 +315,10 @@ class SerpAPIConfig(BaseSearchProviderConfig):
         description="SerpAPI key. Defaults to SERPAPI_KEY env var.",
     )
     """SerpAPI key."""
+
+    def is_configured(self) -> bool:
+        """Check if SerpAPI credentials are configured."""
+        return self.api_key is not None or os.getenv("SERPAPI_KEY") is not None
 
     def get_provider(self) -> AsyncSerpAPIClient:
         """Create SerpAPI provider instance."""
@@ -307,6 +350,10 @@ class SerperConfig(BaseSearchProviderConfig):
     )
     """Base URL for the API."""
 
+    def is_configured(self) -> bool:
+        """Check if Serper credentials are configured."""
+        return self.api_key is not None or os.getenv("SERPER_API_KEY") is not None
+
     def get_provider(self) -> AsyncSerperClient:
         """Create Serper provider instance."""
         from searchly.providers.serper_provider.client import AsyncSerperClient
@@ -330,6 +377,10 @@ class TavilyConfig(BaseSearchProviderConfig):
         description="Tavily API key. Defaults to TAVILY_API_KEY env var.",
     )
     """Tavily API key."""
+
+    def is_configured(self) -> bool:
+        """Check if Tavily credentials are configured."""
+        return self.api_key is not None or os.getenv("TAVILY_API_KEY") is not None
 
     def get_provider(self) -> AsyncTavilyClient:
         """Create Tavily provider instance."""
@@ -360,6 +411,10 @@ class YouConfig(BaseSearchProviderConfig):
         title="Base URL",
     )
     """Base URL for the API."""
+
+    def is_configured(self) -> bool:
+        """Check if You.com credentials are configured."""
+        return self.api_key is not None or os.getenv("YOU_API_KEY") is not None
 
     def get_provider(self) -> AsyncYouClient:
         """Create You.com provider instance."""
