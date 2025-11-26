@@ -83,22 +83,22 @@ class AsyncDataForSEOClient(WebSearchProvider, NewsSearchProvider):
         Returns:
             Unified web search response.
         """
-        location_code = DATAFORSEO_COUNTRY_MAP.get(country) if country else None
+        # Default to US (2840) if no country specified
+        location_code = DATAFORSEO_COUNTRY_MAP.get(country, 2840) if country else 2840
 
         endpoint = "/serp/google/organic/live/advanced"
-        payload = [
-            {
-                "keyword": query,
-                "location_code": location_code,
-                "language_code": language,
-                "device": device,
-                "os": os,
-                "depth": min(max_results, 100),
-                **kwargs,
-            }
-        ]
+        task: dict[str, Any] = {
+            "keyword": query,
+            "location_code": location_code,
+            "language_code": language or "en",
+            "device": device,
+            "os": os,
+            "depth": min(max_results, 100),
+            **kwargs,
+        }
+
         url = f"{self.base_url}{endpoint}"
-        data = await anyenv.post_json(url, payload, headers=self.headers, return_type=dict)
+        data = await anyenv.post_json(url, [task], headers=self.headers, return_type=dict)
 
         items = []
         if (tasks := data.get("tasks")) and (task_result := tasks[0].get("result")):
@@ -140,22 +140,22 @@ class AsyncDataForSEOClient(WebSearchProvider, NewsSearchProvider):
         Returns:
             Unified news search response.
         """
-        location_code = DATAFORSEO_COUNTRY_MAP.get(country) if country else None
+        # Default to US (2840) if no country specified
+        location_code = DATAFORSEO_COUNTRY_MAP.get(country, 2840) if country else 2840
 
         endpoint = "/serp/google/news/live/advanced"
-        payload = [
-            {
-                "keyword": query,
-                "location_code": location_code,
-                "language_code": language,
-                "device": device,
-                "os": os,
-                "depth": min(max_results, 100),
-                **kwargs,
-            }
-        ]
+        task: dict[str, Any] = {
+            "keyword": query,
+            "location_code": location_code,
+            "language_code": language or "en",
+            "device": device,
+            "os": os,
+            "depth": min(max_results, 100),
+            **kwargs,
+        }
+
         url = f"{self.base_url}{endpoint}"
-        data = await anyenv.post_json(url, payload, headers=self.headers, return_type=dict)
+        data = await anyenv.post_json(url, [task], headers=self.headers, return_type=dict)
 
         items = []
         if (tasks := data.get("tasks")) and (task_result := tasks[0].get("result")):
@@ -165,11 +165,12 @@ class AsyncDataForSEOClient(WebSearchProvider, NewsSearchProvider):
             NewsSearchResult(
                 title=item.get("title", ""),
                 url=item.get("url", ""),
-                snippet=item.get("description") or "",
+                snippet=item.get("snippet") or "",
                 source=item.get("domain"),
                 published=item.get("timestamp"),
             )
             for item in items
+            if item.get("type") in {"news_search", "top_stories"}
         ]
         return NewsSearchResponse(results=results[:max_results])
 
@@ -178,11 +179,15 @@ async def example() -> None:
     """Example usage of AsyncDataForSEOClient."""
     client = AsyncDataForSEOClient()
 
-    web_results = await client.web_search("Python programming", max_results=5, country="GB")
+    web_results = await client.web_search("Python programming", max_results=5)
     print(f"Web results: {len(web_results.results)}")
+    for r in web_results.results:
+        print(f"  - {r.title}: {r.url}")
 
-    news_results = await client.news_search("Python programming", max_results=5, country="US")
+    news_results = await client.news_search("Python programming", max_results=5)
     print(f"News results: {len(news_results.results)}")
+    for r in news_results.results:
+        print(f"  - {r.title}: {r.url}")
 
 
 if __name__ == "__main__":
