@@ -7,11 +7,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import anyenv
 
-from searchly.base import (
-    WebSearchProvider,
-    WebSearchResponse,
-    WebSearchResult,
-)
+from searchly.base import WebSearchProvider, WebSearchResponse, WebSearchResult
 
 
 if TYPE_CHECKING:
@@ -77,27 +73,21 @@ class AsyncLinkUpClient(WebSearchProvider):
         Returns:
             Unified web search response.
         """
-        payload: dict[str, Any] = {
-            "q": query,
-            "depth": depth,
-            "outputType": output_type,
-            **kwargs,
-        }
-
+        payload: dict[str, Any] = {"q": query, "depth": depth, "outputType": output_type, **kwargs}
         data = await anyenv.post_json(
             f"{self.base_url}/search",
             json_data=payload,
             headers=self.headers,
             return_type=dict,
         )
-
         results = [
             WebSearchResult(
-                title=source.get("name", ""),
-                url=source.get("url", ""),
-                snippet=source.get("snippet", ""),
+                title=item.get("name", ""),
+                url=item.get("url", ""),
+                snippet=item.get("content", "")[:500] if item.get("content") else "",
             )
-            for source in data.get("sources", [])
+            for item in data.get("results", [])
+            if item.get("url")
         ]
         return WebSearchResponse(results=results[:max_results])
 
