@@ -58,40 +58,6 @@ __license__ = "MIT"
 __url__ = "https://github.com/phil65/searchly"
 
 __all__ = [
-    # Version
-    "__version__",
-    # Protocols
-    "NewsSearchProvider",
-    "WebSearchProvider",
-    # Response models
-    "NewsSearchResponse",
-    "NewsSearchResult",
-    "WebSearchResponse",
-    "WebSearchResult",
-    # Type literals
-    "CountryCode",
-    "LanguageCode",
-    # Config base
-    "BaseSearchProviderConfig",
-    # Provider configs
-    "BraveSearchConfig",
-    "DataForSEOConfig",
-    "ExaConfig",
-    "JigsawStackConfig",
-    "KagiConfig",
-    "LinkUpConfig",
-    "Search1Config",
-    "SerperConfig",
-    "SerpAPIConfig",
-    "TavilyConfig",
-    "YouConfig",
-    # Config unions
-    "NewsSearchProviderConfig",
-    "WebSearchProviderConfig",
-    # Provider name literals
-    "NewsSearchProviderName",
-    "WebSearchProviderName",
-    # Clients
     "AsyncBraveSearch",
     "AsyncDataForSEOClient",
     "AsyncExaClient",
@@ -103,4 +69,29 @@ __all__ = [
     "AsyncSerperClient",
     "AsyncTavilyClient",
     "AsyncYouClient",
+    "BaseSearchProviderConfig",
+    "BraveSearchConfig",
+    "CountryCode",
+    "DataForSEOConfig",
+    "ExaConfig",
+    "JigsawStackConfig",
+    "KagiConfig",
+    "LanguageCode",
+    "LinkUpConfig",
+    "NewsSearchProvider",
+    "NewsSearchProviderConfig",
+    "NewsSearchProviderName",
+    "NewsSearchResponse",
+    "NewsSearchResult",
+    "Search1Config",
+    "SerpAPIConfig",
+    "SerperConfig",
+    "TavilyConfig",
+    "WebSearchProvider",
+    "WebSearchProviderConfig",
+    "WebSearchProviderName",
+    "WebSearchResponse",
+    "WebSearchResult",
+    "YouConfig",
+    "__version__",
 ]
