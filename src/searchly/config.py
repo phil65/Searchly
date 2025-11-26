@@ -489,4 +489,5 @@ def get_config_class(
     for cls in BaseSearchProviderConfig.__subclasses__():
         if cls.model_fields["type"].default == provider_name:
             return cls
-    raise ValueError(f"Unknown provider: {provider_name}")
+    msg = f"Unknown provider: {provider_name}"
+    raise ValueError(msg)

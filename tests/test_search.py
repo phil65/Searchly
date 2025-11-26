@@ -13,9 +13,9 @@ from searchly.base import NewsSearchResponse, WebSearchResponse
 pytestmark = pytest.mark.integration
 
 
-def has_env(*vars: str) -> bool:
+def has_env(*names: str) -> bool:
     """Check if all environment variables are set."""
-    return all(os.getenv(v) for v in vars)
+    return all(os.getenv(name) for name in names)
 
 
 # Web search providers with their required env vars
@@ -99,7 +99,7 @@ NEWS_SEARCH_PROVIDERS = [
 ]
 
 
-def get_web_provider(name: str):
+def get_web_provider(name: str):  # noqa: PLR0911
     """Get a web search provider instance by name."""
     match name:
         case "brave":
