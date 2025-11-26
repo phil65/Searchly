@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from typing import Literal
 
+import anyenv
 from pydantic import BaseModel
 
 
@@ -77,8 +78,6 @@ class AsyncLinkUpClient:
         Raises:
             httpx.HTTPError: If API request fails
         """
-        import anyenv
-
         payload = {
             "q": query,
             "depth": depth,
@@ -96,17 +95,15 @@ class AsyncLinkUpClient:
         )
 
 
-async def example() -> None:
-    """Example usage of AsyncLinkUpClient."""
-    client = AsyncLinkUpClient()
-    results = await client.search(
-        "What is Microsoft's 2024 revenue?",
-        output_type="sourcedAnswer",
-    )
-    print(results)
-
-
 if __name__ == "__main__":
-    import anyenv
+
+    async def example() -> None:
+        """Example usage of AsyncLinkUpClient."""
+        client = AsyncLinkUpClient()
+        results = await client.search(
+            "What is Microsoft's 2024 revenue?",
+            output_type="sourcedAnswer",
+        )
+        print(results)
 
     anyenv.run_sync(example())

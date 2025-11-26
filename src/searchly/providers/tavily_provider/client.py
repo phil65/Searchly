@@ -155,11 +155,7 @@ class AsyncTavilyClient:
         response.raise_for_status()
         return response.json()  # type: ignore[no-any-return]
 
-    async def extract(
-        self,
-        urls: list[str] | str,  # Accept a list of URLs or a single URL
-        **kwargs: Any,  # Accept custom arguments
-    ) -> dict[str, Any]:
+    async def extract(self, urls: list[str] | str, **kwargs: Any) -> dict[str, Any]:
         """Combined extract method."""
         response_dict = await self._extract(urls, **kwargs)
         response_dict["results"] = response_dict.get("results", [])

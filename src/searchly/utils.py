@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import datetime
 import json
 import logging
 from typing import TYPE_CHECKING, Any
+
+import anyenv
+import upath
 
 
 logger = logging.getLogger(__name__)
@@ -47,11 +51,6 @@ def save_results_to_file(results: dict[str, Any]) -> None:
     Args:
         results: Processed results to save
     """
-    import datetime
-
-    import anyenv
-    import upath
-
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = upath.UPath(f"search_results_{timestamp}.json")
 
