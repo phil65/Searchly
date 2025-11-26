@@ -1,45 +1,33 @@
-"""Search tool using Search1API."""
+"""Search1API client implementing search protocols."""
 
 from __future__ import annotations
 
 import os
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import anyenv
-from pydantic import BaseModel
+
+from searchly.base import (
+    WebSearchProvider,
+    WebSearchResponse,
+    WebSearchResult,
+)
+
+
+if TYPE_CHECKING:
+    from searchly.base import CountryCode, LanguageCode
 
 
 TimeRange = Literal["day", "week", "month", "year"]
+SearchService = Literal["google", "bing"]
 
 
-class SearchResult(BaseModel):
-    """Individual search result."""
+class AsyncSearch1API(WebSearchProvider):
+    """Async client for Search1API.
 
-    title: str
-    """Title of the search result."""
-
-    link: str
-    """URL of the search result."""
-
-    snippet: str
-    """Text snippet/description of the result."""
-
-
-class Search1APIResponse(BaseModel):
-    """Search1API response model."""
-
-    searchParameters: dict[str, Any]  # noqa: N815
-    """Parameters used for the search."""
-
-    results: list[SearchResult]
-    """List of search results."""
-
-    images: list[Any]
-    """List of image results if requested."""
-
-
-class AsyncSearch1API:
-    """Async client for Search1API."""
+    Note: Search1API does not support country filtering.
+    The country parameter is accepted for protocol compatibility but is ignored.
+    """
 
     def __init__(
         self,
@@ -64,70 +52,85 @@ class AsyncSearch1API:
             "Authorization": f"Bearer {self.api_key}",
         }
 
-    async def search(
+    async def web_search(
         self,
         query: str,
         *,
-        search_service: Literal["google", "bing"] = "google",
-        max_results: int = 5,
-        crawl_results: int = 0,
-        include_images: bool = False,
+        max_results: int = 10,
+        country: CountryCode | None = None,
+        language: LanguageCode | None = None,
+        search_service: SearchService = "google",
+        time_range: TimeRange | None = None,
         include_sites: list[str] | None = None,
         exclude_sites: list[str] | None = None,
-        language: str | None = None,
-        time_range: TimeRange | None = None,
-    ) -> Search1APIResponse:
-        """Execute search query.
+        **kwargs: Any,
+    ) -> WebSearchResponse:
+        """Execute a web search query.
 
         Args:
-            query: Search query string
-            search_service: Search engine to use
-            max_results: Maximum number of results to return
-            crawl_results: Number of results to crawl
-            include_images: Whether to include image results
-            include_sites: List of sites to include in search
-            exclude_sites: List of sites to exclude from search
-            language: Language code for results
-            time_range: Time range for results
+            query: Search query string.
+            max_results: Maximum number of results to return.
+            country: Ignored (Search1API does not support country filtering).
+            language: Language code for results.
+            search_service: Search engine to use ("google" or "bing").
+            time_range: Time range filter ("day", "week", "month", "year").
+            include_sites: List of sites to include in search.
+            exclude_sites: List of sites to exclude from search.
+            **kwargs: Additional Search1API-specific options.
 
         Returns:
-            Search results and metadata
-
-        Raises:
-            httpx.HTTPError: If API request fails
+            Unified web search response.
         """
-        payload = {
+        payload: dict[str, Any] = {
             "query": query,
             "search_service": search_service,
             "max_results": max_results,
-            "crawl_results": crawl_results,
-            "image": include_images,
+            **kwargs,
         }
 
-        if include_sites:
-            payload["include_sites"] = include_sites
-        if exclude_sites:
-            payload["exclude_sites"] = exclude_sites
         if language:
             payload["language"] = language
         if time_range:
             payload["time_range"] = time_range
+        if include_sites:
+            payload["include_sites"] = include_sites
+        if exclude_sites:
+            payload["exclude_sites"] = exclude_sites
+
         data = await anyenv.post_json(
-            self.base_url + "/search",
+            f"{self.base_url}/search",
             headers=self.headers,
             json_data=payload,
             return_type=dict,
         )
-        return Search1APIResponse(**data)
+
+        results = [
+            WebSearchResult(
+                title=item.get("title", ""),
+                url=item.get("link", ""),
+                snippet=item.get("snippet", ""),
+            )
+            for item in data.get("results", [])
+        ]
+        return WebSearchResponse(results=results[:max_results])
+
+
+async def example() -> None:
+    """Example usage of AsyncSearch1API."""
+    client = AsyncSearch1API()
+
+    results = await client.web_search(
+        "Latest news about OpenAI",
+        max_results=5,
+        language="en",
+        time_range="day",
+    )
+    print(f"Found {len(results.results)} results")
+    for result in results.results:
+        print(f"  - {result.title}: {result.url}")
 
 
 if __name__ == "__main__":
     import asyncio
-
-    async def example() -> None:
-        """Example usage of AsyncSearch1API."""
-        client = AsyncSearch1API()
-        results = await client.search("Latest news about OpenAI", language="en", time_range="day")
-        print(results)
 
     asyncio.run(example())

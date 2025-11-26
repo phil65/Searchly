@@ -1,62 +1,30 @@
-"""Search tool using SerpAPI."""
+"""SerpAPI client implementing search protocols."""
 
 from __future__ import annotations
 
 import os
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import anyenv
-from pydantic import BaseModel
+
+from searchly.base import (
+    NewsSearchProvider,
+    NewsSearchResponse,
+    NewsSearchResult,
+    WebSearchProvider,
+    WebSearchResponse,
+    WebSearchResult,
+)
+
+
+if TYPE_CHECKING:
+    from searchly.base import CountryCode, LanguageCode
 
 
 TimePeriod = Literal["d", "w", "m", "y"]
 
 
-class NewsResult(BaseModel):
-    """Individual news search result."""
-
-    title: str
-    link: str
-    snippet: str
-    source: str | None = None
-    date: str | None = None
-    thumbnail: str | None = None
-    position: int | None = None
-
-
-class SearchResult(BaseModel):
-    """Individual search result."""
-
-    title: str
-    link: str
-    snippet: str
-    position: int | None = None
-    source: str | None = None
-
-
-class SearchResponse(BaseModel):
-    """SerpAPI search response."""
-
-    search_parameters: dict[str, Any]
-    search_metadata: dict[str, Any]
-    organic_results: list[SearchResult]
-    total_results: int | None = None
-    search_information: dict[str, Any] | None = None
-    pagination: dict[str, Any] | None = None
-
-
-class NewsSearchResponse(BaseModel):
-    """SerpAPI news search response."""
-
-    search_parameters: dict[str, Any]
-    search_metadata: dict[str, Any]
-    news_results: list[NewsResult]
-    total_results: int | None = None
-    search_information: dict[str, Any] | None = None
-    pagination: dict[str, Any] | None = None
-
-
-class AsyncSerpAPIClient:
+class AsyncSerpAPIClient(WebSearchProvider, NewsSearchProvider):
     """Async client for SerpAPI."""
 
     BACKEND = "https://serpapi.com"
@@ -72,31 +40,30 @@ class AsyncSerpAPIClient:
             msg = "No API key provided. Set SERPAPI_KEY env var or pass api_key"
             raise ValueError(msg)
 
-    async def search(
+    async def web_search(
         self,
         query: str,
         *,
-        country: str | None = None,
-        language: str | None = None,
+        max_results: int = 10,
+        country: CountryCode | None = None,
+        language: LanguageCode | None = None,
         location: str | None = None,
         safe: bool = True,
-        max_results: int = 10,
-    ) -> SearchResponse:
-        """Execute web search query using SerpAPI.
+        **kwargs: Any,
+    ) -> WebSearchResponse:
+        """Execute a web search query.
 
         Args:
-            query: Search query string
-            country: Country code (e.g. 'us', 'uk')
-            language: Language code (e.g. 'en', 'es')
-            location: Location string (e.g. 'Austin, Texas')
-            safe: Enable safe search
-            max_results: Maximum number of results to return
+            query: Search query string.
+            max_results: Maximum number of results to return.
+            country: Country code for regional results (converted to lowercase).
+            language: Language code for results (converted to lowercase).
+            location: Location string (e.g. "Austin, Texas").
+            safe: Enable safe search.
+            **kwargs: Additional SerpAPI-specific options.
 
         Returns:
-            Structured search results
-
-        Raises:
-            Exception: If API request fails
+            Unified web search response.
         """
         params: dict[str, Any] = {
             "q": query,
@@ -105,6 +72,7 @@ class AsyncSerpAPIClient:
             "api_key": self.api_key,
             "output": "json",
             "source": "python",
+            **kwargs,
         }
 
         if country:
@@ -116,75 +84,56 @@ class AsyncSerpAPIClient:
         if safe:
             params["safe"] = "active"
 
-        # Execute search
         response = await anyenv.get_json(f"{self.BACKEND}/search", params=params, return_type=dict)
-        # Transform results into our standard format
-        return SearchResponse(
-            search_parameters=response.get("search_parameters", {}),
-            search_metadata=response.get("search_metadata", {}),
-            organic_results=[
-                SearchResult(
-                    title=result["title"],
-                    link=result["link"],
-                    snippet=result.get("snippet", ""),
-                    position=result.get("position"),
-                    source=result.get("source"),
-                )
-                for result in response.get("organic_results", [])
-            ],
-            total_results=response.get("search_information", {}).get("total_results"),
-            search_information=response.get("search_information", {}),
-            pagination=response.get("pagination", {}),
-        )
 
-    async def search_news(
+        results = [
+            WebSearchResult(
+                title=item.get("title", ""),
+                url=item.get("link", ""),
+                snippet=item.get("snippet", ""),
+            )
+            for item in response.get("organic_results", [])
+        ]
+        return WebSearchResponse(results=results[:max_results])
+
+    async def news_search(
         self,
         query: str,
         *,
-        country: str | None = None,
-        language: str | None = None,
+        max_results: int = 10,
+        country: CountryCode | None = None,
+        language: LanguageCode | None = None,
         location: str | None = None,
         safe: bool = True,
         time_period: TimePeriod | None = None,
-        max_results: int = 10,
-        offset: int = 0,
+        **kwargs: Any,
     ) -> NewsSearchResponse:
-        """Execute news search query using SerpAPI.
+        """Execute a news search query.
 
         Args:
-            query: Search query string
-            country: Country code (e.g. 'us', 'uk')
-            language: Language code (e.g. 'en', 'es')
-            location: Location string (e.g. 'Austin, Texas')
-            safe: Enable safe search
-            time_period: Time period filter (d=day, w=week, m=month, y=year)
-            max_results: Maximum number of results to return
-            offset: Pagination offset (multiples of max_results)
+            query: Search query string.
+            max_results: Maximum number of results to return.
+            country: Country code for regional results (converted to lowercase).
+            language: Language code for results (converted to lowercase).
+            location: Location string (e.g. "Austin, Texas").
+            safe: Enable safe search.
+            time_period: Time period filter ("d"=day, "w"=week, "m"=month, "y"=year).
+            **kwargs: Additional SerpAPI-specific options.
 
         Returns:
-            Structured news search results
-
-        Raises:
-            Exception: If API request fails
+            Unified news search response.
         """
-        # Build search parameters
         params: dict[str, Any] = {
             "q": query,
-            "tbm": "nws",  # Set to news search
+            "tbm": "nws",
             "num": max_results,
+            "engine": "google",
             "api_key": self.api_key,
             "output": "json",
             "source": "python",
-            "engine": "google",
+            **kwargs,
         }
 
-        # Apply pagination if requested
-        if offset > 0:
-            params["start"] = offset * max_results
-
-        # Apply time period filter if provided
-        if time_period:
-            params["tbs"] = f"qdr:{time_period}"
         if country:
             params["gl"] = country.lower()
         if language:
@@ -193,40 +142,38 @@ class AsyncSerpAPIClient:
             params["location"] = location
         if safe:
             params["safe"] = "active"
+        if time_period:
+            params["tbs"] = f"qdr:{time_period}"
 
-        # Execute search
         response = await anyenv.get_json(f"{self.BACKEND}/search", params=params, return_type=dict)
-        # Transform results into our standard format
-        return NewsSearchResponse(
-            search_parameters=response.get("search_parameters", {}),
-            search_metadata=response.get("search_metadata", {}),
-            news_results=[
-                NewsResult(
-                    title=result["title"],
-                    link=result["link"],
-                    snippet=result.get("snippet", ""),
-                    source=result.get("source", ""),
-                    date=result.get("date", ""),
-                    thumbnail=result.get("thumbnail", ""),
-                    position=result.get("position"),
-                )
-                for result in response.get("news_results", [])
-            ],
-            total_results=response.get("search_information", {}).get("total_results"),
-            search_information=response.get("search_information", {}),
-            pagination=response.get("pagination", {}),
-        )
+
+        results = [
+            NewsSearchResult(
+                title=item.get("title", ""),
+                url=item.get("link", ""),
+                snippet=item.get("snippet", ""),
+                source=item.get("source"),
+                published=item.get("date"),
+            )
+            for item in response.get("news_results", [])
+        ]
+        return NewsSearchResponse(results=results[:max_results])
+
+
+async def example() -> None:
+    """Example usage of AsyncSerpAPIClient."""
+    client = AsyncSerpAPIClient()
+
+    web_results = await client.web_search("Python programming", max_results=5, language="en")
+    print(f"Web results: {len(web_results.results)}")
+    for result in web_results.results:
+        print(f"  - {result.title}: {result.url}")
+
+    news_results = await client.news_search("Python programming", max_results=5, time_period="d")
+    print(f"News results: {len(news_results.results)}")
 
 
 if __name__ == "__main__":
     import asyncio
-
-    async def example() -> None:
-        """Example usage of AsyncSerpAPIClient."""
-        client = AsyncSerpAPIClient()
-        web_results = await client.search("Python programming", language="en")
-        print("Web results:", len(web_results.organic_results))
-        news_results = await client.search_news("Python programming", time_period="d")
-        print("News results:", len(news_results.news_results))
 
     asyncio.run(example())

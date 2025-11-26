@@ -1,131 +1,38 @@
-"""Search tool using You.com API."""
+"""You.com API client implementing search protocols."""
 
 from __future__ import annotations
 
 import os
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import anyenv
-from pydantic import BaseModel, Field
+
+from searchly.base import (
+    NewsSearchProvider,
+    NewsSearchResponse,
+    NewsSearchResult,
+    WebSearchProvider,
+    WebSearchResponse,
+    WebSearchResult,
+)
+
+
+if TYPE_CHECKING:
+    from searchly.base import CountryCode, LanguageCode
 
 
 SafeSearchLevel = Literal["off", "moderate", "strict"]
 FreshnessFilter = Literal["day", "week", "month", "year"]
-LivecrawlOption = Literal["web", "news", "all"]
-LivecrawlFormat = Literal["html", "markdown"]
 
 
-class WebResult(BaseModel):
-    """Individual You.com web search result."""
-
-    url: str
-    title: str
-    description: str
-    snippets: list[str] = Field(default_factory=list)
-    thumbnail_url: str | None = None
-    page_age: str | None = None
-    authors: list[str] = Field(default_factory=list)
-    favicon_url: str | None = None
-
-
-class NewsResult(BaseModel):
-    """Individual You.com news result from unified search."""
-
-    url: str
-    title: str
-    description: str
-    thumbnail_url: str | None = None
-    page_age: str | None = None
-
-
-class LiveNewsMetaUrl(BaseModel):
-    """URL metadata for live news result."""
-
-    hostname: str | None = None
-    netloc: str | None = None
-    path: str | None = None
-    scheme: str | None = None
-
-
-class LiveNewsThumbnail(BaseModel):
-    """Thumbnail for live news result."""
-
-    src: str | None = None
-
-
-class LiveNewsItem(BaseModel):
-    """Individual live news result."""
-
-    url: str
-    title: str
-    description: str
-    age: str | None = None
-    page_age: str | None = None
-    source_name: str | None = None
-    type: str | None = None
-    thumbnail: LiveNewsThumbnail | None = None
-    meta_url: LiveNewsMetaUrl | None = None
-    article_id: str | None = None
-
-
-class LiveNewsQuery(BaseModel):
-    """Query info from live news response."""
-
-    original: str | None = None
-    spellcheck_off: bool | None = None
-
-
-class LiveNewsMetadata(BaseModel):
-    """Metadata from live news response."""
-
-    request_uuid: str | None = None
-
-
-class LiveNewsData(BaseModel):
-    """Live news data container."""
-
-    query: LiveNewsQuery | None = None
-    results: list[LiveNewsItem] = Field(default_factory=list)
-    type: str | None = None
-    metadata: LiveNewsMetadata | None = None
-
-
-class LiveNewsResponse(BaseModel):
-    """You.com live news response."""
-
-    news: LiveNewsData = Field(default_factory=LiveNewsData)
-
-
-class SearchResults(BaseModel):
-    """Container for web and news results."""
-
-    web: list[WebResult] = Field(default_factory=list)
-    news: list[NewsResult] = Field(default_factory=list)
-
-
-class SearchMetadata(BaseModel):
-    """Metadata from search response."""
-
-    request_uuid: str | None = None
-    query: str | None = None
-    latency: float | None = None
-
-
-class SearchResponse(BaseModel):
-    """You.com unified search response."""
-
-    results: SearchResults = Field(default_factory=SearchResults)
-    metadata: SearchMetadata = Field(default_factory=SearchMetadata)
-
-
-class AsyncYouClient:
+class AsyncYouClient(WebSearchProvider, NewsSearchProvider):
     """Async client for You.com API."""
 
     def __init__(
         self,
         *,
         api_key: str | None = None,
-        base_url: str = "https://ydc-index.io",
+        base_url: str = "https://api.ydc-index.io",
     ):
         """Initialize You.com client.
 
@@ -137,116 +44,124 @@ class AsyncYouClient:
         if not self.api_key:
             msg = "No API key provided. Set YOU_API_KEY env var or pass api_key"
             raise ValueError(msg)
+
         self.base_url = base_url
         self.headers = {"X-API-Key": self.api_key}
 
-    async def search(
+    async def web_search(
         self,
         query: str,
         *,
-        count: int = 10,
-        offset: int = 0,
-        country: str | None = None,
-        language: str | None = None,
+        max_results: int = 10,
+        country: CountryCode | None = None,
+        language: LanguageCode | None = None,
         safesearch: SafeSearchLevel = "moderate",
         freshness: FreshnessFilter | str | None = None,
-        livecrawl: LivecrawlOption | None = None,
-        livecrawl_formats: LivecrawlFormat | None = None,
-    ) -> SearchResponse:
-        """Execute unified search query using You.com API.
-
-        Returns web and news results based on query classification.
+        **kwargs: Any,
+    ) -> WebSearchResponse:
+        """Execute a web search query.
 
         Args:
-            query: Search query string (supports search operators)
-            count: Max results per section (web/news)
-            offset: Pagination offset (0-9), results offset = count * offset
-            country: Country code (e.g., 'US', 'GB')
-            language: Language code in BCP 47 format (e.g., 'EN', 'DE')
-            safesearch: Content moderation level
-            freshness: Filter by recency ('day', 'week', 'month', 'year')
-                       or date range 'YYYY-MM-DDtoYYYY-MM-DD'
-            livecrawl: Which sections to livecrawl for full page content
-            livecrawl_formats: Format for livecrawled content
+            query: Search query string.
+            max_results: Maximum number of results to return.
+            country: Country code for regional results (uppercase).
+            language: Language code for results (converted to uppercase).
+            safesearch: Content moderation level.
+            freshness: Filter by recency ("day", "week", "month", "year").
+            **kwargs: Additional You.com-specific options.
 
         Returns:
-            Search results containing web and news sections
-
-        Raises:
-            ValueError: If invalid parameters are provided
-            httpx.HTTPError: If API request fails
+            Unified web search response.
         """
-        if not 0 <= offset <= 9:  # noqa: PLR2004
-            msg = "offset must be between 0 and 9"
-            raise ValueError(msg)
-
         params: dict[str, Any] = {
             "query": query,
-            "count": count,
-            "offset": offset,
+            "count": max_results,
             "safesearch": safesearch,
+            **kwargs,
         }
 
         if country:
             params["country"] = country
         if language:
-            params["language"] = language
+            params["language"] = language.upper()
         if freshness:
             params["freshness"] = freshness
-        if livecrawl:
-            params["livecrawl"] = livecrawl
-        if livecrawl_formats:
-            params["livecrawl_formats"] = livecrawl_formats
 
-        url = f"{self.base_url}/v1/search"
+        url = f"{self.base_url}/search"
         response = await anyenv.get_json(url, headers=self.headers, params=params, return_type=dict)
-        return SearchResponse(**response)
 
-    async def news(
+        results = [
+            WebSearchResult(
+                title=item.get("title", ""),
+                url=item.get("url", ""),
+                snippet=item.get("description", ""),
+            )
+            for item in response.get("hits", [])
+        ]
+        return WebSearchResponse(results=results[:max_results])
+
+    async def news_search(
         self,
         query: str,
         *,
-        count: int | None = None,
-    ) -> LiveNewsResponse:
-        """Execute live news search query.
-
-        Uses separate endpoint at api.ydc-index.io/livenews.
+        max_results: int = 10,
+        country: CountryCode | None = None,
+        language: LanguageCode | None = None,
+        **kwargs: Any,
+    ) -> NewsSearchResponse:
+        """Execute a news search query.
 
         Args:
-            query: News search query string
-            count: Max number of news results to return
+            query: Search query string.
+            max_results: Maximum number of results to return.
+            country: Ignored (news endpoint does not support country filtering).
+            language: Ignored (news endpoint does not support language filtering).
+            **kwargs: Additional You.com-specific options.
 
         Returns:
-            Live news results
-
-        Raises:
-            httpx.HTTPError: If API request fails
+            Unified news search response.
         """
-        params: dict[str, Any] = {"q": query}
-        if count is not None:
-            params["count"] = count
+        params: dict[str, Any] = {
+            "q": query,
+            **kwargs,
+        }
 
-        url = "https://api.ydc-index.io/livenews"
+        if max_results:
+            params["count"] = max_results
+
+        url = f"{self.base_url}/news"
         response = await anyenv.get_json(url, headers=self.headers, params=params, return_type=dict)
-        return LiveNewsResponse(**response)
+
+        news_data = response.get("news", {})
+        results = [
+            NewsSearchResult(
+                title=item.get("title", ""),
+                url=item.get("url", ""),
+                snippet=item.get("description", ""),
+                source=item.get("source_name"),
+                published=item.get("age") or item.get("page_age"),
+            )
+            for item in news_data.get("results", [])
+        ]
+        return NewsSearchResponse(results=results[:max_results])
 
 
 async def example() -> None:
     """Example usage of AsyncYouClient."""
     client = AsyncYouClient()
 
-    # Search example - returns both web and news results
-    results = await client.search(
-        "climate change solutions", count=5, country="US", freshness="week"
+    web_results = await client.web_search(
+        "Python programming",
+        max_results=5,
+        country="US",
+        freshness="week",
     )
-    print(f"Search found {len(results.results.web)} web results")
-    print(f"Search found {len(results.results.news)} news results")
-    if results.metadata.latency:
-        print(f"Latency: {results.metadata.latency}ms")
+    print(f"Web results: {len(web_results.results)}")
+    for result in web_results.results:
+        print(f"  - {result.title}: {result.url}")
 
-    # Live news example
-    news = await client.news("breaking news today", count=5)
-    print(f"Live news found {len(news.news.results)} results")
+    news_results = await client.news_search("Python programming", max_results=5)
+    print(f"News results: {len(news_results.results)}")
 
 
 if __name__ == "__main__":
