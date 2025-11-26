@@ -1,55 +1,33 @@
-"""Search tool using DataForSEO API."""
+"""DataForSEO API client implementing search protocols."""
 
 from __future__ import annotations
 
 import base64
 import os
-from typing import Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import anyenv
-from pydantic import BaseModel, ConfigDict
+
+from searchly.base import (
+    DATAFORSEO_COUNTRY_MAP,
+    NewsSearchProvider,
+    NewsSearchResponse,
+    NewsSearchResult,
+    WebSearchProvider,
+    WebSearchResponse,
+    WebSearchResult,
+)
+
+
+if TYPE_CHECKING:
+    from searchly.base import CountryCode, LanguageCode
 
 
 OSType = Literal["windows", "macos", "android", "ios"]
 DeviceType = Literal["desktop", "mobile", "tablet"]
 
 
-class SearchItem(BaseModel):
-    """Individual search result item."""
-
-    model_config = ConfigDict(str_to_lower=True)
-
-    type: str
-    rank_group: int
-    rank_absolute: int
-    domain: str
-    title: str
-    description: str | None = None
-    url: str
-    highlighted: list[str] | None = None
-
-
-class SearchResponse(BaseModel):
-    """DataForSEO search response."""
-
-    status_code: int
-    status_message: str
-    cost: float
-    time: str
-    results: list[SearchItem]
-
-
-class ScreenshotResponse(BaseModel):
-    """Screenshot response from DataForSEO."""
-
-    status_code: int
-    status_message: str
-    cost: float
-    time: str
-    image_url: str
-
-
-class AsyncDataForSEOClient:
+class AsyncDataForSEOClient(WebSearchProvider, NewsSearchProvider):
     """Async client for DataForSEO API."""
 
     def __init__(
@@ -80,167 +58,131 @@ class AsyncDataForSEOClient:
         auth = base64.b64encode(f"{self.login}:{self.password}".encode()).decode()
         self.headers = {"Authorization": f"Basic {auth}", "Content-Type": "application/json"}
 
-    async def search(
+    async def web_search(
         self,
         query: str,
         *,
-        country_code: int | None = None,
-        language_code: str | None = None,
+        max_results: int = 10,
+        country: CountryCode | None = None,
+        language: LanguageCode | None = None,
         device: DeviceType = "desktop",
         os: OSType = "windows",
-        depth: int = 100,
-    ) -> SearchResponse:
-        """Execute organic search query using DataForSEO API.
+        **kwargs: Any,
+    ) -> WebSearchResponse:
+        """Execute a web search query.
 
         Args:
-            query: Search query string
-            country_code: Location code (e.g. 2826 for UK)
-            language_code: Language code (e.g. 'en')
-            device: Device type for results
-            os: Operating system for results
-            depth: Number of results to return (max 100)
+            query: Search query string.
+            max_results: Maximum number of results to return (max 100).
+            country: Country code for regional results (ISO 3166-1 alpha-2).
+            language: Language code for results (ISO 639-1).
+            device: Device type for results.
+            os: Operating system for results.
+            **kwargs: Additional DataForSEO-specific options.
 
         Returns:
-            Search results with metadata
-
-        Raises:
-            httpx.HTTPError: If API request fails
+            Unified web search response.
         """
+        location_code = DATAFORSEO_COUNTRY_MAP.get(country) if country else None
+
         endpoint = "/serp/google/organic/live/advanced"
         payload = [
             {
                 "keyword": query,
-                "location_code": country_code,
-                "language_code": language_code,
+                "location_code": location_code,
+                "language_code": language,
                 "device": device,
                 "os": os,
-                "depth": min(depth, 100),
+                "depth": min(max_results, 100),
+                **kwargs,
             }
         ]
         url = f"{self.base_url}{endpoint}"
         data = await anyenv.post_json(url, payload, headers=self.headers, return_type=dict)
 
-        if not data.get("tasks", []):
-            msg = "No results found in response"
-            raise ValueError(msg)
+        items = []
+        if (tasks := data.get("tasks")) and (task_result := tasks[0].get("result")):
+            items = task_result[0].get("items", [])
 
-        task = data["tasks"][0]
-        results = []
-        if result := task.get("result"):
-            for item in result[0].get("items", []):
-                if item.get("type") in {"organic", "featured_snippet"}:
-                    results.append(SearchItem(**item))  # noqa: PERF401
+        results = [
+            WebSearchResult(
+                title=item.get("title", ""),
+                url=item.get("url", ""),
+                snippet=item.get("description") or "",
+            )
+            for item in items
+            if item.get("type") in {"organic", "featured_snippet"}
+        ]
+        return WebSearchResponse(results=results[:max_results])
 
-        return SearchResponse(
-            status_code=data["status_code"],
-            status_message=data["status_message"],
-            cost=data.get("cost", 0.0),
-            time=data.get("time", ""),
-            results=results,
-        )
-
-    async def search_news(
+    async def news_search(
         self,
         query: str,
         *,
-        country_code: int | None = None,
-        language_code: str | None = None,
+        max_results: int = 10,
+        country: CountryCode | None = None,
+        language: LanguageCode | None = None,
         device: DeviceType = "desktop",
         os: OSType = "windows",
-        depth: int = 100,
-    ) -> SearchResponse:
-        """Execute news search query using DataForSEO API.
+        **kwargs: Any,
+    ) -> NewsSearchResponse:
+        """Execute a news search query.
 
         Args:
-            query: Search query string
-            country_code: Location code (e.g. 2826 for UK)
-            language_code: Language code (e.g. 'en')
-            device: Device type for results
-            os: Operating system for results
-            depth: Number of results to return (max 100)
+            query: Search query string.
+            max_results: Maximum number of results to return (max 100).
+            country: Country code for regional results (ISO 3166-1 alpha-2).
+            language: Language code for results (ISO 639-1).
+            device: Device type for results.
+            os: Operating system for results.
+            **kwargs: Additional DataForSEO-specific options.
 
         Returns:
-            News search results with metadata
-
-        Raises:
-            httpx.HTTPError: If API request fails
+            Unified news search response.
         """
+        location_code = DATAFORSEO_COUNTRY_MAP.get(country) if country else None
+
         endpoint = "/serp/google/news/live/advanced"
         payload = [
             {
                 "keyword": query,
-                "location_code": country_code,
-                "language_code": language_code,
+                "location_code": location_code,
+                "language_code": language,
                 "device": device,
                 "os": os,
-                "depth": min(depth, 100),
+                "depth": min(max_results, 100),
+                **kwargs,
             }
         ]
         url = f"{self.base_url}{endpoint}"
         data = await anyenv.post_json(url, payload, headers=self.headers, return_type=dict)
-        # Transform response into our format
-        if not data.get("tasks", []):
-            msg = "No results found in response"
-            raise ValueError(msg)
 
-        task = data["tasks"][0]
-        results = []
-        if result := task.get("result"):
-            for item in result[0].get("items", []):
-                # For news results, we might want to filter differently
-                # but for now we'll keep it similar to the original
-                results.append(SearchItem(**item))  # noqa: PERF401
+        items = []
+        if (tasks := data.get("tasks")) and (task_result := tasks[0].get("result")):
+            items = task_result[0].get("items", [])
 
-        return SearchResponse(
-            status_code=data["status_code"],
-            status_message=data["status_message"],
-            cost=data.get("cost", 0.0),
-            time=data.get("time", ""),
-            results=results,
-        )
-
-    async def get_screenshot(self, task_id: str, *, scale_factor: float = 1.0) -> str:
-        """Get screenshot for a specific search result.
-
-        Args:
-            task_id: Task ID from a previous search result
-            scale_factor: Scale factor for the screenshot (0.1-1.0)
-
-        Returns:
-            URL to the screenshot image
-
-        Raises:
-            ValueError: If scale factor is invalid
-            httpx.HTTPError: If API request fails
-        """
-        if not 0.1 <= scale_factor <= 1.0:  # noqa: PLR2004
-            msg = "Scale factor must be between 0.1 and 1.0"
-            raise ValueError(msg)
-
-        endpoint = "/serp/screenshot"
-        payload = [{"task_id": task_id, "browser_screen_scale_factor": scale_factor}]
-        url = f"{self.base_url}{endpoint}"
-        data = await anyenv.post_json(url, payload, headers=self.headers, return_type=dict)
-        if not data.get("tasks", []):
-            msg = "No results found in response"
-            raise ValueError(msg)
-
-        if (
-            (result := data["tasks"][0].get("result"))
-            and (items := result[0].get("items"))
-            and (image_url := items[0].get("image"))
-        ):
-            return image_url  # type: ignore[no-any-return]
-
-        msg = "No screenshot URL found in response"
-        raise ValueError(msg)
+        results = [
+            NewsSearchResult(
+                title=item.get("title", ""),
+                url=item.get("url", ""),
+                snippet=item.get("description") or "",
+                source=item.get("domain"),
+                published=item.get("timestamp"),
+            )
+            for item in items
+        ]
+        return NewsSearchResponse(results=results[:max_results])
 
 
 async def example() -> None:
     """Example usage of AsyncDataForSEOClient."""
     client = AsyncDataForSEOClient()
-    results = await client.search("Python programming", country_code=2826, language_code="en")
-    print(results)
+
+    web_results = await client.web_search("Python programming", max_results=5, country="GB")
+    print(f"Web results: {len(web_results.results)}")
+
+    news_results = await client.news_search("Python programming", max_results=5, country="US")
+    print(f"News results: {len(news_results.results)}")
 
 
 if __name__ == "__main__":

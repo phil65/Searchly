@@ -1,36 +1,32 @@
-"""Search tool using JigsawStack API."""
+"""JigsawStack API client implementing search protocols."""
 
 from __future__ import annotations
 
 import os
-from typing import Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import anyenv
-from pydantic import BaseModel
+
+from searchly.base import (
+    WebSearchProvider,
+    WebSearchResponse,
+    WebSearchResult,
+)
+
+
+if TYPE_CHECKING:
+    from searchly.base import CountryCode, LanguageCode
 
 
 SafeSearchSetting = Literal["moderate", "strict", "off"]
 
 
-class SearchResult(BaseModel):
-    """Individual search result."""
+class AsyncJigsawStackClient(WebSearchProvider):
+    """Async client for JigsawStack API.
 
-    title: str
-    url: str
-    description: str
-    content: str | None = None
-    site_name: str | None = None
-    site_long_name: str | None = None
-    age: str | None = None
-    language: str | None = None
-    is_safe: bool = True
-    favicon: str | None = None
-    thumbnail: str | None = None
-    snippets: list[str] | None = None
-
-
-class AsyncJigsawStackClient:
-    """Async client for JigsawStack API."""
+    Note: JigsawStack does not support country/language/max_results filtering.
+    These parameters are accepted for protocol compatibility but are ignored.
+    """
 
     def __init__(
         self,
@@ -52,39 +48,41 @@ class AsyncJigsawStackClient:
         self.base_url = base_url
         self.headers = {"Content-Type": "application/json", "x-api-key": self.api_key}
 
-    async def search(
+    async def web_search(
         self,
         query: str,
         *,
+        max_results: int = 10,
+        country: CountryCode | None = None,
+        language: LanguageCode | None = None,
         ai_overview: bool = True,
         safe_search: SafeSearchSetting = "moderate",
         spell_check: bool = True,
-        urls: list[str] | None = None,
-    ) -> list[SearchResult]:
-        """Execute search query using JigsawStack API.
+        **kwargs: Any,
+    ) -> WebSearchResponse:
+        """Execute a web search query.
 
         Args:
-            query: Search query string
-            ai_overview: Include AI-powered overview
-            safe_search: Safe search level
-            spell_check: Enable query spell checking
-            urls: List of specific URLs to search
+            query: Search query string.
+            max_results: Maximum number of results to return.
+            country: Ignored (JigsawStack does not support country filtering).
+            language: Ignored (JigsawStack does not support language filtering).
+            ai_overview: Include AI-powered overview.
+            safe_search: Safe search level.
+            spell_check: Enable query spell checking.
+            **kwargs: Additional JigsawStack-specific options.
 
         Returns:
-            Search results with metadata
-
-        Raises:
-            httpx.HTTPError: If API request fails
+            Unified web search response.
         """
-        payload = {
+        payload: dict[str, Any] = {
             "query": query,
             "ai_overview": ai_overview,
             "safe_search": safe_search,
             "spell_check": spell_check,
+            **kwargs,
         }
 
-        if urls:
-            payload["byo_urls"] = urls
         data = await anyenv.post_json(
             f"{self.base_url}/web/search",
             payload,
@@ -92,15 +90,26 @@ class AsyncJigsawStackClient:
             return_type=dict,
         )
 
-        return [SearchResult(**i) for i in data["results"]]
+        results = [
+            WebSearchResult(
+                title=item.get("title", ""),
+                url=item.get("url", ""),
+                snippet=item.get("description", ""),
+            )
+            for item in data.get("results", [])
+        ]
+        return WebSearchResponse(results=results[:max_results])
+
+
+async def example() -> None:
+    """Example usage of AsyncJigsawStackClient."""
+    client = AsyncJigsawStackClient()
+
+    results = await client.web_search("What is the capital of France?", max_results=5)
+    print(f"Found {len(results.results)} results")
+    for result in results.results:
+        print(f"  - {result.title}: {result.url}")
 
 
 if __name__ == "__main__":
-
-    async def example() -> None:
-        """Example usage of AsyncJigsawStackClient."""
-        client = AsyncJigsawStackClient()
-        results = await client.search("What is the capital of France?")
-        print(results)
-
     anyenv.run_sync(example())

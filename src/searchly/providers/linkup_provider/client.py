@@ -1,35 +1,33 @@
-"""Search tool using LinkUp API."""
+"""LinkUp API client implementing search protocols."""
 
 from __future__ import annotations
 
 import os
-from typing import Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import anyenv
-from pydantic import BaseModel
+
+from searchly.base import (
+    WebSearchProvider,
+    WebSearchResponse,
+    WebSearchResult,
+)
+
+
+if TYPE_CHECKING:
+    from searchly.base import CountryCode, LanguageCode
 
 
 OutputType = Literal["sourcedAnswer", "searchResults", "structured"]
 SearchDepth = Literal["standard", "deep"]
 
 
-class Source(BaseModel):
-    """Source information for a search result."""
+class AsyncLinkUpClient(WebSearchProvider):
+    """Async client for LinkUp API.
 
-    name: str
-    url: str
-    snippet: str
-
-
-class LinkUpResponse(BaseModel):
-    """LinkUp API response model."""
-
-    answer: str | None = None
-    sources: list[Source]
-
-
-class AsyncLinkUpClient:
-    """Async client for LinkUp API."""
+    Note: LinkUp does not support country/language/max_results filtering.
+    These parameters are accepted for protocol compatibility but are ignored.
+    """
 
     def __init__(
         self,
@@ -54,56 +52,68 @@ class AsyncLinkUpClient:
             "Content-Type": "application/json",
         }
 
-    async def search(
+    async def web_search(
         self,
         query: str,
         *,
+        max_results: int = 10,
+        country: CountryCode | None = None,
+        language: LanguageCode | None = None,
         depth: SearchDepth = "standard",
         output_type: OutputType = "searchResults",
-        include_images: bool = False,
-        structured_schema: str | None = None,
-    ) -> LinkUpResponse:
-        """Execute search query using LinkUp API.
+        **kwargs: Any,
+    ) -> WebSearchResponse:
+        """Execute a web search query.
 
         Args:
-            query: Search query string
-            depth: Search depth - standard (faster) or deep (more thorough)
-            output_type: Type of output format
-            include_images: Whether to include images in results
-            structured_schema: JSON schema for structured output (if applicable)
+            query: Search query string.
+            max_results: Ignored (LinkUp does not support result count).
+            country: Ignored (LinkUp does not support country filtering).
+            language: Ignored (LinkUp does not support language filtering).
+            depth: Search depth - "standard" (faster) or "deep" (more thorough).
+            output_type: Type of output format.
+            **kwargs: Additional LinkUp-specific options.
 
         Returns:
-            Search results with sources
-
-        Raises:
-            httpx.HTTPError: If API request fails
+            Unified web search response.
         """
-        payload = {
+        payload: dict[str, Any] = {
             "q": query,
             "depth": depth,
             "outputType": output_type,
-            "includeImages": include_images,
+            **kwargs,
         }
 
-        if output_type == "structured" and structured_schema:
-            payload["structuredOutputSchema"] = structured_schema
-        return await anyenv.post_json(
+        data = await anyenv.post_json(
             f"{self.base_url}/search",
             json_data=payload,
             headers=self.headers,
-            return_type=LinkUpResponse,
+            return_type=dict,
         )
+
+        results = [
+            WebSearchResult(
+                title=source.get("name", ""),
+                url=source.get("url", ""),
+                snippet=source.get("snippet", ""),
+            )
+            for source in data.get("sources", [])
+        ]
+        return WebSearchResponse(results=results[:max_results])
+
+
+async def example() -> None:
+    """Example usage of AsyncLinkUpClient."""
+    client = AsyncLinkUpClient()
+
+    results = await client.web_search(
+        "What is Microsoft's 2024 revenue?",
+        depth="deep",
+    )
+    print(f"Found {len(results.results)} results")
+    for result in results.results:
+        print(f"  - {result.title}: {result.url}")
 
 
 if __name__ == "__main__":
-
-    async def example() -> None:
-        """Example usage of AsyncLinkUpClient."""
-        client = AsyncLinkUpClient()
-        results = await client.search(
-            "What is Microsoft's 2024 revenue?",
-            output_type="sourcedAnswer",
-        )
-        print(results)
-
     anyenv.run_sync(example())

@@ -1,41 +1,27 @@
-"""Exa API client."""
+"""Exa API client implementing search protocols."""
 
 from __future__ import annotations
 
 import os
-from typing import Any, Literal, TypedDict
+from typing import TYPE_CHECKING, Any, Literal
 
-from pydantic import BaseModel, Field
-
-
-class SearchResult(BaseModel):
-    """Individual search result."""
-
-    title: str
-    url: str
-    text: str | None = None
-    summary: str | None = None
-    author: str | None = None
-    published_date: str | None = None
-    score: float | None = None
+from searchly.base import (
+    WebSearchProvider,
+    WebSearchResponse,
+    WebSearchResult,
+)
 
 
-class SearchResponse(BaseModel):
-    """Exa search response."""
-
-    results: list[SearchResult] = Field(default_factory=list)
-    resolved_search_type: str | None = None
-    cost_dollars: float | None = None
+if TYPE_CHECKING:
+    from searchly.base import CountryCode, LanguageCode
 
 
-class SummaryOptions(TypedDict, total=False):
-    """Options for structured summary."""
+class AsyncExaClient(WebSearchProvider):
+    """Async client for Exa API.
 
-    schema: dict[str, Any]
-
-
-class AsyncExaClient:
-    """Async client for Exa API."""
+    Note: Exa does not support country/language filtering. These parameters
+    are accepted for protocol compatibility but are ignored.
+    """
 
     def __init__(self, *, api_key: str | None = None):
         """Initialize Exa client.
@@ -56,84 +42,84 @@ class AsyncExaClient:
 
         self.client = AsyncExa(api_key=self.api_key)
 
-    async def search(
+    async def web_search(
         self,
         query: str,
         *,
-        num_results: int = 10,
+        max_results: int = 10,
+        country: CountryCode | None = None,
+        language: LanguageCode | None = None,
+        search_type: Literal["auto", "keyword", "neural", "deep"] = "auto",
         max_characters: int | None = None,
         include_domains: list[str] | None = None,
         exclude_domains: list[str] | None = None,
         start_published_date: str | None = None,
         end_published_date: str | None = None,
-        search_type: Literal["auto", "keyword", "neural", "deep"] = "auto",
         category: str | None = None,
         summary: bool | dict[str, Any] | None = None,
-    ) -> SearchResponse:
-        """Execute search query using Exa API.
+        **kwargs: Any,
+    ) -> WebSearchResponse:
+        """Execute a web search query.
 
         Args:
-            query: Search query string
-            num_results: Number of results to return
-            max_characters: Max characters for text content (None for full text)
-            include_domains: List of domains to include
-            exclude_domains: List of domains to exclude
-            start_published_date: Only include content published after this date (ISO 8601)
-            end_published_date: Only include content published before this date (ISO 8601)
-            search_type: Type of search to perform
-            category: Category to focus search on
-            summary: Whether to include AI summary (True, or dict with schema)
+            query: Search query string.
+            max_results: Maximum number of results to return.
+            country: Ignored (Exa does not support country filtering).
+            language: Ignored (Exa does not support language filtering).
+            search_type: Type of search ("auto", "keyword", "neural", "deep").
+            max_characters: Max characters for text content.
+            include_domains: List of domains to include.
+            exclude_domains: List of domains to exclude.
+            start_published_date: Only include content after this date (ISO 8601).
+            end_published_date: Only include content before this date (ISO 8601).
+            category: Category to focus search on.
+            summary: Whether to include AI summary.
+            **kwargs: Additional Exa-specific options.
 
         Returns:
-            Search results with metadata
+            Unified web search response.
         """
         text_opts: dict[str, Any] | bool = True
         if max_characters is not None:
             text_opts = {"max_characters": max_characters}
 
-        results = await self.client.search_and_contents(
+        response = await self.client.search_and_contents(
             query=query,
             text=text_opts,
             summary=summary,
-            num_results=num_results,
+            num_results=max_results,
             include_domains=include_domains,
             exclude_domains=exclude_domains,
             start_published_date=start_published_date,
             end_published_date=end_published_date,
             type=search_type,
             category=category,
+            **kwargs,
         )
 
-        search_results = [
-            SearchResult(
+        results = [
+            WebSearchResult(
                 title=result.title or "",
                 url=result.url,
-                text=result.text,
-                summary=result.summary,
-                author=result.author,
-                published_date=result.published_date,
-                score=result.score,
+                snippet=result.text or result.summary or "",
             )
-            for result in results.results
+            for result in response.results
         ]
-
-        return SearchResponse(
-            results=search_results,
-            resolved_search_type=results.resolved_search_type,
-            cost_dollars=results.cost_dollars.total if results.cost_dollars else None,
-        )
+        return WebSearchResponse(results=results[:max_results])
 
 
 async def example() -> None:
     """Example usage of AsyncExaClient."""
     client = AsyncExaClient()
-    results = await client.search("AI advancements in 2023", num_results=3, max_characters=500)
+
+    results = await client.web_search(
+        "AI advancements in 2023",
+        max_results=5,
+        search_type="neural",
+    )
     print(f"Found {len(results.results)} results")
     for result in results.results:
-        print(f"Title: {result.title}")
-        print(f"URL: {result.url}")
-        print(f"Text: {result.text}")
-        print("---")
+        print(f"  - {result.title}: {result.url}")
 
 
 if __name__ == "__main__":
