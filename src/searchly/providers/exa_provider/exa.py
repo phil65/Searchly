@@ -28,7 +28,7 @@ class AsyncExaClient(WebSearchProvider):
         try:
             from exa_py import AsyncExa
         except ImportError as e:
-            msg = "Could not import exa_py. Install it with 'pip install exa_py'"
+            msg = "Could not import exa_py."
             raise ImportError(msg) from e
 
         self.api_key = api_key or os.getenv("EXA_API_KEY")
