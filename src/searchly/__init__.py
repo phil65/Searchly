@@ -34,6 +34,7 @@ from searchly.config import (
     WebSearchProviderConfig,
     WebSearchProviderName,
     YouConfig,
+    get_config_class,
 )
 from searchly.providers.brave_provider.client import AsyncBraveSearch
 from searchly.providers.dataforseo_provider.dataforseo import AsyncDataForSEOClient
@@ -94,4 +95,5 @@ __all__ = [
     "WebSearchResult",
     "YouConfig",
     "__version__",
+    "get_config_class",
 ]

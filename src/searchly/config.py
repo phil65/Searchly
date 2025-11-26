@@ -470,3 +470,23 @@ NewsSearchProviderConfig = Annotated[
     BraveSearchConfig | DataForSEOConfig | SerpAPIConfig | SerperConfig | TavilyConfig | YouConfig,
     Field(discriminator="type"),
 ]
+
+
+def get_config_class(
+    provider_name: WebSearchProviderName,
+) -> type[BaseSearchProviderConfig]:
+    """Get the config class for a provider name.
+
+    Args:
+        provider_name: The provider type literal value.
+
+    Returns:
+        The corresponding config class.
+
+    Raises:
+        ValueError: If the provider name is unknown.
+    """
+    for cls in BaseSearchProviderConfig.__subclasses__():
+        if cls.model_fields["type"].default == provider_name:
+            return cls
+    raise ValueError(f"Unknown provider: {provider_name}")
