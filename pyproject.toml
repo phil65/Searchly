@@ -30,6 +30,7 @@ dependencies = [
   "anyenv[httpx]>=0.4.4",
   "pydantic",
   # Only add below (Copier)
+  "schemez>=2.1.5",
   "universal-pathlib>=0.2.6",
 ]
 
