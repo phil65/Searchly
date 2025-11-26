@@ -68,7 +68,7 @@ class AsyncBraveSearch(WebSearchProvider, NewsSearchProvider):
         Returns:
             Unified web search response.
         """
-        import brave_search_python_client as brave  # type: ignore[import-untyped]
+        import brave_search_python_client as brave
 
         req = brave.WebSearchRequest(
             q=query,
@@ -110,7 +110,7 @@ class AsyncBraveSearch(WebSearchProvider, NewsSearchProvider):
         Returns:
             Unified news search response.
         """
-        import brave_search_python_client as brave  # type: ignore[import-untyped]
+        import brave_search_python_client as brave
 
         req = brave.NewsSearchRequest(
             q=query,
