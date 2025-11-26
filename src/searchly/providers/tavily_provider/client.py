@@ -86,7 +86,7 @@ class AsyncTavilyClient(WebSearchProvider, NewsSearchProvider):
             response = await client.post("/search", content=anyenv.dump_json(data))
 
         if response.status_code == 200:  # noqa: PLR2004
-            return response.json()
+            return response.json()  # type: ignore[no-any-return]
         if response.status_code == 429:  # noqa: PLR2004
             detail = "Too many requests."
             with contextlib.suppress(Exception):
@@ -95,7 +95,7 @@ class AsyncTavilyClient(WebSearchProvider, NewsSearchProvider):
         if response.status_code == 401:  # noqa: PLR2004
             raise InvalidAPIKeyError
         response.raise_for_status()
-        return response.json()
+        return response.json()  # type: ignore[no-any-return]
 
     async def web_search(
         self,

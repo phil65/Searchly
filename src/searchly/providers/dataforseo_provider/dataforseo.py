@@ -186,8 +186,8 @@ async def example() -> None:
 
     news_results = await client.news_search("Python programming", max_results=5)
     print(f"News results: {len(news_results.results)}")
-    for r in news_results.results:
-        print(f"  - {r.title}: {r.url}")
+    for news_result in news_results.results:
+        print(f"  - {news_result.title}: {news_result.url}")
 
 
 if __name__ == "__main__":

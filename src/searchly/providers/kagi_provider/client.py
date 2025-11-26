@@ -144,7 +144,7 @@ class AsyncKagiClient(WebSearchProvider):
         data = await anyenv.get_json(
             endpoint, params=params, headers=self.headers, return_type=dict
         )
-        return data.get("data", {}).get("output", "")
+        return data.get("data", {}).get("output", "")  # type: ignore[no-any-return]
 
 
 async def example() -> None:

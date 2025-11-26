@@ -85,7 +85,7 @@ class AsyncSerperClient(WebSearchProvider, NewsSearchProvider):
             payload["location"] = location
         if date_range:
             payload["tbs"] = f"qdr:{date_range}"
-
+        assert self.api_key
         headers = {"X-API-KEY": self.api_key, "Content-Type": "application/json"}
         data = await anyenv.post_json(
             f"{self.base_url}/search",
@@ -143,7 +143,7 @@ class AsyncSerperClient(WebSearchProvider, NewsSearchProvider):
             payload["location"] = location
         if date_range:
             payload["tbs"] = f"qdr:{date_range}"
-
+        assert self.api_key
         headers = {"X-API-KEY": self.api_key, "Content-Type": "application/json"}
         data = await anyenv.post_json(
             f"{self.base_url}/news",
