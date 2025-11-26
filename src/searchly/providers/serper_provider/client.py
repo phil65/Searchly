@@ -99,7 +99,7 @@ class SerperTool:
 
         return self._format_as_markdown(processed_results, query, search_type)
 
-    def _process_results(self, results: dict, search_type: str) -> dict[str, Any]:
+    def _process_results(self, results: dict[str, Any], search_type: str) -> dict[str, Any]:
         """Process raw API results into a cleaner format.
 
         Args:

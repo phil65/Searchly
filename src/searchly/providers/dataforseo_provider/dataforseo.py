@@ -257,7 +257,7 @@ class AsyncDataForSEOClient:
             and (items := result[0].get("items"))
             and (image_url := items[0].get("image"))
         ):
-            return image_url
+            return image_url  # type: ignore[no-any-return]
 
         msg = "No screenshot URL found in response"
         raise ValueError(msg)

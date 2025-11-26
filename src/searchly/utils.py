@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ def get_total_tokens_from_string(string: str, model: str = DEFAULT_MODEL_ENCODIN
 
 
 def get_max_items_from_list(
-    data: Sequence[dict], max_tokens: int = DEFAULT_MAX_TOKENS
+    data: Sequence[dict[str, Any]], max_tokens: int = DEFAULT_MAX_TOKENS
 ) -> list[dict[str, str]]:
     """Get max items from list of items based on defined max tokens."""
     result = []
@@ -41,7 +41,7 @@ def get_max_items_from_list(
     return result
 
 
-def save_results_to_file(results: dict) -> None:
+def save_results_to_file(results: dict[str, Any]) -> None:
     """Save results to a file with timestamp in filename.
 
     Args:

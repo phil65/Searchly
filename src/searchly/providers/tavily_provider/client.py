@@ -5,7 +5,9 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import os
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
+
+import httpx
 
 from searchly.exceptions import (
     BadRequestError,
@@ -31,7 +33,6 @@ class AsyncTavilyClient:
         api_key: str | None = None,
         company_info_tags: Sequence[str] = ("news", "general", "finance"),
     ):
-        import httpx
 
         if api_key is None:
             api_key = os.getenv("TAVILY_API_KEY")
@@ -45,12 +46,14 @@ class AsyncTavilyClient:
         }
         self.base_url = "https://api.tavily.com"
         self.timeout = 180
-        self._client_creator = lambda: httpx.AsyncClient(
+        self._company_info_tags = company_info_tags
+
+    def _client_creator(self) -> httpx.AsyncClient:
+        return httpx.AsyncClient(
             headers=self.headers,
             base_url=self.base_url,
             timeout=self.timeout,
         )
-        self._company_info_tags = company_info_tags
 
     async def _search(
         self,
@@ -64,8 +67,8 @@ class AsyncTavilyClient:
         include_answer: bool = False,
         include_raw_content: bool = False,
         include_images: bool = False,
-        **kwargs,
-    ) -> dict:
+        **kwargs: Any,
+    ) -> dict[str, Any]:
         """Internal search method to send the request to the API."""
         import anyenv
 
@@ -89,7 +92,7 @@ class AsyncTavilyClient:
             response = await client.post("/search", content=anyenv.dump_json(data))
 
         if response.status_code == 200:  # noqa: PLR2004
-            return response.json()
+            return response.json()  # type: ignore[no-any-return]
         if response.status_code == 429:  # noqa: PLR2004
             detail = "Too many requests."
             with contextlib.suppress(Exception):
@@ -99,7 +102,7 @@ class AsyncTavilyClient:
         if response.status_code == 401:  # noqa: PLR2004
             raise InvalidAPIKeyError
         response.raise_for_status()
-        return response.json()
+        return response.json()  # type: ignore[no-any-return]
 
     async def search(
         self,
@@ -113,8 +116,8 @@ class AsyncTavilyClient:
         include_answer: bool = False,
         include_raw_content: bool = False,
         include_images: bool = False,
-        **kwargs,  # Accept custom arguments
-    ) -> dict:
+        **kwargs: Any,  # Accept custom arguments
+    ) -> dict[str, Any]:
         """Combined search method. Set search_depth to either "basic" or "advanced"."""
         response_dict = await self._search(
             query,
@@ -134,7 +137,7 @@ class AsyncTavilyClient:
 
         return response_dict
 
-    async def _extract(self, urls: list[str] | str, **kwargs) -> dict:
+    async def _extract(self, urls: list[str] | str, **kwargs: Any) -> dict[str, Any]:
         """Internal extract method to send the request to the API."""
         import anyenv
 
@@ -146,7 +149,7 @@ class AsyncTavilyClient:
             response = await client.post("/extract", content=anyenv.dump_json(data))
 
         if response.status_code == 200:  # noqa: PLR2004
-            return response.json()
+            return response.json()  # type: ignore[no-any-return]
         if response.status_code == 400:  # noqa: PLR2004
             detail = "Bad request. The request was invalid or cannot be served."
             with contextlib.suppress(KeyError):
@@ -161,13 +164,13 @@ class AsyncTavilyClient:
 
             raise UsageLimitExceededError(detail)
         response.raise_for_status()
-        return response.json()
+        return response.json()  # type: ignore[no-any-return]
 
     async def extract(
         self,
         urls: list[str] | str,  # Accept a list of URLs or a single URL
-        **kwargs,  # Accept custom arguments
-    ) -> dict:
+        **kwargs: Any,  # Accept custom arguments
+    ) -> dict[str, Any]:
         """Combined extract method."""
         response_dict = await self._extract(urls, **kwargs)
         response_dict["results"] = response_dict.get("results", [])
@@ -184,7 +187,7 @@ class AsyncTavilyClient:
         include_domains: Sequence[str] | None = None,
         exclude_domains: Sequence[str] | None = None,
         max_tokens: int = 4000,
-        **kwargs,  # Accept custom arguments
+        **kwargs: Any,  # Accept custom arguments
     ) -> str:
         """Get the search context for a query.
 
@@ -225,7 +228,7 @@ class AsyncTavilyClient:
         max_results: int = 5,
         include_domains: Sequence[str] | None = None,
         exclude_domains: Sequence[str] | None = None,
-        **kwargs,  # Accept custom arguments
+        **kwargs: Any,  # Accept custom arguments
     ) -> str:
         """Q&A search. Search depth is advanced by default to get the best answer."""
         response_dict = await self._search(
@@ -241,7 +244,7 @@ class AsyncTavilyClient:
             include_answer=True,
             **kwargs,
         )
-        return response_dict.get("answer", "")
+        return response_dict.get("answer", "")  # type: ignore[no-any-return]
 
 
 if __name__ == "__main__":

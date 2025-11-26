@@ -72,11 +72,7 @@ class AsyncBraveSearch:
         Raises:
             BraveSearchAPIError: If API request fails
         """
-        request = {
-            "q": query,
-            "text_layout": "paragraph",
-        }
-
+        request: dict[str, Any] = {"q": query, "text_layout": "paragraph"}
         if country:
             request["country"] = country
         if language:

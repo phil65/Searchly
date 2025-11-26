@@ -6,6 +6,7 @@ from datetime import datetime
 import os
 from typing import Any, Literal
 
+import anyenv
 from pydantic import BaseModel, Field
 
 
@@ -100,26 +101,14 @@ class AsyncKagiClient:
         Raises:
             httpx.HTTPError: If API request fails
         """
-        import anyenv
-
-        params: dict[str, Any] = {
-            "q": query,
-            "engine": engine,
-            "limit": limit,
-        }
+        params: dict[str, Any] = {"q": query, "engine": engine, "limit": limit}
 
         if region:
             params["region"] = region
         if language:
             params["language"] = language
-
-        data = await anyenv.get_json(
-            f"{self.base_url}/search",
-            params=params,
-            headers=self.headers,
-            return_type=dict,
-        )
-
+        url = f"{self.base_url}/search"
+        data = await anyenv.get_json(url, params=params, headers=self.headers, return_type=dict)
         return SearchResponse(**data)
 
     async def summarize(
@@ -142,43 +131,22 @@ class AsyncKagiClient:
         Raises:
             httpx.HTTPError: If API request fails
         """
-        import anyenv
-
-        params: dict[str, Any] = {
-            "url": query,  # Can be URL or a search query
-            "summary_type": summary_type,
-        }
+        #  url Can be URL or a search query
+        params: dict[str, Any] = {"url": query, "summary_type": summary_type}
 
         if target_language:
             params["target_language"] = target_language
-
-        data = await anyenv.get_json(
-            f"{self.base_url}/summarize",
-            params=params,
-            headers=self.headers,
-            return_type=dict,
-        )
-
-        return data.get("data", {}).get("output", "")
+        url = f"{self.base_url}/summarize"
+        data = await anyenv.get_json(url, params=params, headers=self.headers, return_type=dict)
+        return data.get("data", {}).get("output", "")  # type: ignore[no-any-return]
 
 
 async def example() -> None:
     """Example usage of AsyncKagiClient."""
     client = AsyncKagiClient()
-
-    # Regular search
-    results = await client.search(
-        "Python programming",
-        limit=5,
-        language="en",
-    )
+    results = await client.search("Python programming", limit=5, language="en")
     print(f"Found {len(results.data)} results")
-
-    # Summarization
-    summary = await client.summarize(
-        "https://python.org",
-        summary_type="takeaway",
-    )
+    summary = await client.summarize("https://python.org", summary_type="takeaway")
     print(f"Summary: {summary}")
 
 
