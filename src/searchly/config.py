@@ -9,6 +9,32 @@ from pydantic import ConfigDict, Field, SecretStr
 from schemez import Schema
 
 
+# Provider name literals for type-safe configuration
+WebSearchProviderName = Literal[
+    "brave",
+    "dataforseo",
+    "exa",
+    "jigsawstack",
+    "kagi",
+    "linkup",
+    "search1",
+    "serpapi",
+    "serper",
+    "tavily",
+    "you",
+]
+
+NewsSearchProviderName = Literal[
+    "brave",
+    "dataforseo",
+    "kagi",
+    "serpapi",
+    "serper",
+    "tavily",
+    "you",
+]
+
+
 if TYPE_CHECKING:
     from searchly.providers.brave_provider.client import AsyncBraveSearch
     from searchly.providers.dataforseo_provider.dataforseo import AsyncDataForSEOClient

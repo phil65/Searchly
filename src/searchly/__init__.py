@@ -26,11 +26,13 @@ from searchly.config import (
     KagiConfig,
     LinkUpConfig,
     NewsSearchProviderConfig,
+    NewsSearchProviderName,
     Search1Config,
     SerperConfig,
     SerpAPIConfig,
     TavilyConfig,
     WebSearchProviderConfig,
+    WebSearchProviderName,
     YouConfig,
 )
 from searchly.providers.brave_provider.client import AsyncBraveSearch
@@ -86,6 +88,9 @@ __all__ = [
     # Config unions
     "NewsSearchProviderConfig",
     "WebSearchProviderConfig",
+    # Provider name literals
+    "NewsSearchProviderName",
+    "WebSearchProviderName",
     # Clients
     "AsyncBraveSearch",
     "AsyncDataForSEOClient",
