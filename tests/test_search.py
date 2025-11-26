@@ -18,6 +18,11 @@ def has_env(*names: str) -> bool:
     return all(os.getenv(name) for name in names)
 
 
+def test_nothing():
+    """Test nothing in order to make tests pass if all deselected."""
+    assert True
+
+
 # Web search providers with their required env vars
 WEB_SEARCH_PROVIDERS = [
     pytest.param(
