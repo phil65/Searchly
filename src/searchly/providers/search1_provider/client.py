@@ -7,11 +7,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import anyenv
 
-from searchly.base import (
-    WebSearchProvider,
-    WebSearchResponse,
-    WebSearchResult,
-)
+from searchly.base import WebSearchProvider, WebSearchResponse, WebSearchResult
 
 
 if TYPE_CHECKING:

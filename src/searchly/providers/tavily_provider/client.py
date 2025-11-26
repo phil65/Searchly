@@ -17,11 +17,7 @@ from searchly.base import (
     WebSearchResponse,
     WebSearchResult,
 )
-from searchly.exceptions import (
-    InvalidAPIKeyError,
-    MissingAPIKeyError,
-    UsageLimitExceededError,
-)
+from searchly.exceptions import InvalidAPIKeyError, MissingAPIKeyError, UsageLimitExceededError
 
 
 if TYPE_CHECKING:
