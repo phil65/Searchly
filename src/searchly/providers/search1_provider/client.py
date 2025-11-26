@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from typing import Any, Literal
 
+import anyenv
 from pydantic import BaseModel
 
 
@@ -95,8 +96,6 @@ class AsyncSearch1API:
         Raises:
             httpx.HTTPError: If API request fails
         """
-        import anyenv
-
         payload = {
             "query": query,
             "search_service": search_service,
@@ -122,18 +121,13 @@ class AsyncSearch1API:
         return Search1APIResponse(**data)
 
 
-async def example() -> None:
-    """Example usage of AsyncSearch1API."""
-    client = AsyncSearch1API()
-    results = await client.search(
-        "Latest news about OpenAI",
-        language="en",
-        time_range="day",
-    )
-    print(results)
-
-
 if __name__ == "__main__":
     import asyncio
+
+    async def example() -> None:
+        """Example usage of AsyncSearch1API."""
+        client = AsyncSearch1API()
+        results = await client.search("Latest news about OpenAI", language="en", time_range="day")
+        print(results)
 
     asyncio.run(example())

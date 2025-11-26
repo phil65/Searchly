@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from typing import Any, Literal
 
+import anyenv
 from pydantic import BaseModel
 
 
@@ -97,9 +98,6 @@ class AsyncSerpAPIClient:
         Raises:
             Exception: If API request fails
         """
-        import anyenv
-
-        # Build search parameters
         params: dict[str, Any] = {
             "q": query,
             "num": max_results,
@@ -119,12 +117,7 @@ class AsyncSerpAPIClient:
             params["safe"] = "active"
 
         # Execute search
-        response = await anyenv.get_json(
-            f"{self.BACKEND}/search",
-            params=params,
-            return_type=dict,
-        )
-
+        response = await anyenv.get_json(f"{self.BACKEND}/search", params=params, return_type=dict)
         # Transform results into our standard format
         return SearchResponse(
             search_parameters=response.get("search_parameters", {}),
@@ -174,8 +167,6 @@ class AsyncSerpAPIClient:
         Raises:
             Exception: If API request fails
         """
-        import anyenv
-
         # Build search parameters
         params: dict[str, Any] = {
             "q": query,
@@ -194,7 +185,6 @@ class AsyncSerpAPIClient:
         # Apply time period filter if provided
         if time_period:
             params["tbs"] = f"qdr:{time_period}"
-
         if country:
             params["gl"] = country.lower()
         if language:
@@ -205,12 +195,7 @@ class AsyncSerpAPIClient:
             params["safe"] = "active"
 
         # Execute search
-        response = await anyenv.get_json(
-            f"{self.BACKEND}/search",
-            params=params,
-            return_type=dict,
-        )
-
+        response = await anyenv.get_json(f"{self.BACKEND}/search", params=params, return_type=dict)
         # Transform results into our standard format
         return NewsSearchResponse(
             search_parameters=response.get("search_parameters", {}),
@@ -233,29 +218,15 @@ class AsyncSerpAPIClient:
         )
 
 
-async def example() -> None:
-    """Example usage of AsyncSerpAPIClient."""
-    client = AsyncSerpAPIClient()
-
-    # Regular web search
-    web_results = await client.search(
-        "Python programming",
-        language="en",
-        country="us",
-    )
-    print("Web results:", len(web_results.organic_results))
-
-    # News search
-    news_results = await client.search_news(
-        "Python programming",
-        language="en",
-        country="us",
-        time_period="d",  # Last day
-    )
-    print("News results:", len(news_results.news_results))
-
-
 if __name__ == "__main__":
     import asyncio
+
+    async def example() -> None:
+        """Example usage of AsyncSerpAPIClient."""
+        client = AsyncSerpAPIClient()
+        web_results = await client.search("Python programming", language="en")
+        print("Web results:", len(web_results.organic_results))
+        news_results = await client.search_news("Python programming", time_period="d")
+        print("News results:", len(news_results.news_results))
 
     asyncio.run(example())

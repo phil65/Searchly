@@ -6,6 +6,7 @@ import base64
 import os
 from typing import Literal
 
+import anyenv
 from pydantic import BaseModel, ConfigDict
 
 
@@ -77,10 +78,7 @@ class AsyncDataForSEOClient:
 
         self.base_url = base_url
         auth = base64.b64encode(f"{self.login}:{self.password}".encode()).decode()
-        self.headers = {
-            "Authorization": f"Basic {auth}",
-            "Content-Type": "application/json",
-        }
+        self.headers = {"Authorization": f"Basic {auth}", "Content-Type": "application/json"}
 
     async def search(
         self,
@@ -108,8 +106,6 @@ class AsyncDataForSEOClient:
         Raises:
             httpx.HTTPError: If API request fails
         """
-        import anyenv
-
         endpoint = "/serp/google/organic/live/advanced"
         payload = [
             {
@@ -122,12 +118,7 @@ class AsyncDataForSEOClient:
             }
         ]
         url = f"{self.base_url}{endpoint}"
-        data = await anyenv.post_json(
-            url,
-            payload,
-            headers=self.headers,
-            return_type=dict,
-        )
+        data = await anyenv.post_json(url, payload, headers=self.headers, return_type=dict)
 
         if not data.get("tasks", []):
             msg = "No results found in response"
@@ -174,8 +165,6 @@ class AsyncDataForSEOClient:
         Raises:
             httpx.HTTPError: If API request fails
         """
-        import anyenv
-
         endpoint = "/serp/google/news/live/advanced"
         payload = [
             {
@@ -188,13 +177,7 @@ class AsyncDataForSEOClient:
             }
         ]
         url = f"{self.base_url}{endpoint}"
-        data = await anyenv.post_json(
-            url,
-            payload,
-            headers=self.headers,
-            return_type=dict,
-        )
-
+        data = await anyenv.post_json(url, payload, headers=self.headers, return_type=dict)
         # Transform response into our format
         if not data.get("tasks", []):
             msg = "No results found in response"
@@ -230,8 +213,6 @@ class AsyncDataForSEOClient:
             ValueError: If scale factor is invalid
             httpx.HTTPError: If API request fails
         """
-        import anyenv
-
         if not 0.1 <= scale_factor <= 1.0:  # noqa: PLR2004
             msg = "Scale factor must be between 0.1 and 1.0"
             raise ValueError(msg)
@@ -239,21 +220,13 @@ class AsyncDataForSEOClient:
         endpoint = "/serp/screenshot"
         payload = [{"task_id": task_id, "browser_screen_scale_factor": scale_factor}]
         url = f"{self.base_url}{endpoint}"
-        data = await anyenv.post_json(
-            url,
-            payload,
-            headers=self.headers,
-            return_type=dict,
-        )
-
+        data = await anyenv.post_json(url, payload, headers=self.headers, return_type=dict)
         if not data.get("tasks", []):
             msg = "No results found in response"
             raise ValueError(msg)
 
-        task = data["tasks"][0]
-
         if (
-            (result := task.get("result"))
+            (result := data["tasks"][0].get("result"))
             and (items := result[0].get("items"))
             and (image_url := items[0].get("image"))
         ):
@@ -266,15 +239,9 @@ class AsyncDataForSEOClient:
 async def example() -> None:
     """Example usage of AsyncDataForSEOClient."""
     client = AsyncDataForSEOClient()
-    results = await client.search(
-        "Python programming",
-        country_code=2826,  # UK
-        language_code="en",
-    )
+    results = await client.search("Python programming", country_code=2826, language_code="en")
     print(results)
 
 
 if __name__ == "__main__":
-    import anyenv
-
     anyenv.run_sync(example())

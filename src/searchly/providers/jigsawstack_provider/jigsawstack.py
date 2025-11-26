@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from typing import Literal
 
+import anyenv
 from pydantic import BaseModel
 
 
@@ -95,7 +96,6 @@ class AsyncJigsawStackClient:
 
 
 if __name__ == "__main__":
-    import anyenv
 
     async def example() -> None:
         """Example usage of AsyncJigsawStackClient."""

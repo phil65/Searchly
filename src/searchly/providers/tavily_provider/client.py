@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
 import contextlib
 import os
 from typing import TYPE_CHECKING, Any, Literal
 
+import anyenv
 import httpx
 
 from searchly.exceptions import (
@@ -40,20 +40,13 @@ class AsyncTavilyClient:
         if not api_key:
             raise MissingAPIKeyError
 
-        self.headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}",
-        }
+        self.headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
         self.base_url = "https://api.tavily.com"
         self.timeout = 180
         self._company_info_tags = company_info_tags
 
     def _client_creator(self) -> httpx.AsyncClient:
-        return httpx.AsyncClient(
-            headers=self.headers,
-            base_url=self.base_url,
-            timeout=self.timeout,
-        )
+        return httpx.AsyncClient(headers=self.headers, base_url=self.base_url, timeout=self.timeout)
 
     async def _search(
         self,
@@ -70,8 +63,6 @@ class AsyncTavilyClient:
         **kwargs: Any,
     ) -> dict[str, Any]:
         """Internal search method to send the request to the API."""
-        import anyenv
-
         data = {
             "query": query,
             "search_depth": search_depth,
@@ -139,8 +130,6 @@ class AsyncTavilyClient:
 
     async def _extract(self, urls: list[str] | str, **kwargs: Any) -> dict[str, Any]:
         """Internal extract method to send the request to the API."""
-        import anyenv
-
         data = {"urls": urls}
         if kwargs:
             data.update(kwargs)
@@ -199,8 +188,6 @@ class AsyncTavilyClient:
 
         Returns a string of JSON containing the search context up to context limit.
         """
-        import anyenv
-
         response_dict = await self._search(
             query,
             search_depth=search_depth,

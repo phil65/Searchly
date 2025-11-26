@@ -6,6 +6,8 @@ import logging
 import os
 from typing import Any, Literal
 
+import anyenv
+
 from searchly.utils import save_results_to_file
 
 
@@ -67,8 +69,6 @@ class SerperTool:
         Returns:
             Markdown-formatted search results or JSON dict if return_json=True
         """
-        import anyenv
-
         if search_type not in {"search", "news"}:
             error_msg = f"Invalid search type: {search_type}. Must be 'search' or 'news'"
             raise ValueError(error_msg)
