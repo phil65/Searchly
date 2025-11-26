@@ -8,9 +8,6 @@ from typing import TYPE_CHECKING, Any, Literal
 import anyenv
 
 from searchly.base import (
-    NewsSearchProvider,
-    NewsSearchResponse,
-    NewsSearchResult,
     WebSearchProvider,
     WebSearchResponse,
     WebSearchResult,
@@ -22,10 +19,15 @@ if TYPE_CHECKING:
 
 
 SummaryType = Literal["summary", "takeaway"]
+SummaryEngine = Literal["cecil", "agnes", "muriel"]
 
 
-class AsyncKagiClient(WebSearchProvider, NewsSearchProvider):
-    """Async client for Kagi API."""
+class AsyncKagiClient(WebSearchProvider):
+    """Async client for Kagi API.
+
+    Note: Kagi Search API requires API billing to be set up at
+    https://kagi.com/settings/billing_api
+    """
 
     def __init__(
         self,
@@ -45,10 +47,7 @@ class AsyncKagiClient(WebSearchProvider, NewsSearchProvider):
             raise ValueError(msg)
 
         self.base_url = base_url
-        self.headers = {
-            "Authorization": f"Bot {self.api_key}",
-            "Content-Type": "application/json",
-        }
+        self.headers = {"Authorization": f"Bot {self.api_key}"}
 
     async def web_search(
         self,
@@ -64,27 +63,26 @@ class AsyncKagiClient(WebSearchProvider, NewsSearchProvider):
         Args:
             query: Search query string.
             max_results: Maximum number of results to return.
-            country: Country code for regional results (converted to lowercase).
-            language: Language code for results.
+            country: Country code (not used - Kagi inherits account settings).
+            language: Language code (not used - Kagi inherits account settings).
             **kwargs: Additional Kagi-specific options.
 
         Returns:
             Unified web search response.
-        """
-        params: dict[str, Any] = {
-            "q": query,
-            "limit": max_results,
-            **kwargs,
-        }
 
-        if country:
-            params["region"] = country.lower()
-        if language:
-            params["language"] = language
+        Note:
+            Kagi Search API inherits personalization settings from your account,
+            including blocked/promoted sites and regional preferences.
+        """
+        # country/language not documented in Kagi API - settings inherited from account
+        _ = country, language
+
+        params: dict[str, Any] = {"q": query, "limit": max_results, **kwargs}
 
         url = f"{self.base_url}/search"
         data = await anyenv.get_json(url, params=params, headers=self.headers, return_type=dict)
 
+        # Filter to search results (t=0), excluding related searches (t=1)
         results = [
             WebSearchResult(
                 title=item.get("title") or "",
@@ -92,77 +90,53 @@ class AsyncKagiClient(WebSearchProvider, NewsSearchProvider):
                 snippet=item.get("snippet") or "",
             )
             for item in data.get("data", [])
-            if item.get("url")  # Filter out items without URLs
+            if item.get("t") == 0 and item.get("url")
         ]
         return WebSearchResponse(results=results[:max_results])
 
-    async def news_search(
-        self,
-        query: str,
-        *,
-        max_results: int = 10,
-        country: CountryCode | None = None,
-        language: LanguageCode | None = None,
-        **kwargs: Any,
-    ) -> NewsSearchResponse:
-        """Execute a news search query.
-
-        Args:
-            query: Search query string.
-            max_results: Maximum number of results to return.
-            country: Country code for regional results (converted to lowercase).
-            language: Language code for results.
-            **kwargs: Additional Kagi-specific options.
-
-        Returns:
-            Unified news search response.
-        """
-        params: dict[str, Any] = {
-            "q": query,
-            "limit": max_results,
-            "engine": "news",
-            **kwargs,
-        }
-
-        if country:
-            params["region"] = country.lower()
-        if language:
-            params["language"] = language
-
-        url = f"{self.base_url}/search"
-        data = await anyenv.get_json(url, params=params, headers=self.headers, return_type=dict)
-
-        results = [
-            NewsSearchResult(
-                title=item.get("title") or "",
-                url=item.get("url") or "",
-                snippet=item.get("snippet") or "",
-                published=item.get("published"),
-            )
-            for item in data.get("data", [])
-            if item.get("url")
-        ]
-        return NewsSearchResponse(results=results[:max_results])
-
     async def summarize(
         self,
-        url: str,
+        url: str | None = None,
+        text: str | None = None,
         *,
-        target_language: str | None = None,
+        engine: SummaryEngine = "cecil",
         summary_type: SummaryType = "summary",
+        target_language: str | None = None,
+        cache: bool = True,
     ) -> str:
         """Get an AI-generated summary using the Kagi Universal Summarizer.
 
         Args:
-            url: URL to summarize.
-            target_language: Target language for the summary.
-            summary_type: Type of summary to generate.
+            url: URL to summarize. Exclusive with text.
+            text: Text to summarize. Exclusive with url.
+            engine: Summarization engine (cecil, agnes, or muriel).
+            summary_type: Type of summary (summary or takeaway).
+            target_language: Target language code for translation (e.g., "EN", "DE").
+            cache: Whether to allow cached requests/responses.
 
         Returns:
             Generated summary text.
-        """
-        params: dict[str, Any] = {"url": url, "summary_type": summary_type}
 
+        Raises:
+            ValueError: If neither url nor text is provided, or both are provided.
+        """
+        if url and text:
+            msg = "Provide either url or text, not both"
+            raise ValueError(msg)
+        if not url and not text:
+            msg = "Either url or text must be provided"
+            raise ValueError(msg)
+
+        params: dict[str, Any] = {
+            "engine": engine,
+            "summary_type": summary_type,
+            "cache": str(cache).lower(),
+        }
+
+        if url:
+            params["url"] = url
+        if text:
+            params["text"] = text
         if target_language:
             params["target_language"] = target_language
 
@@ -177,15 +151,18 @@ async def example() -> None:
     """Example usage of AsyncKagiClient."""
     client = AsyncKagiClient()
 
-    web_results = await client.web_search("Python programming", max_results=5, language="en")
+    # Web search
+    web_results = await client.web_search("Python programming", max_results=5)
     print(f"Web results: {len(web_results.results)}")
     for result in web_results.results:
         print(f"  - {result.title}: {result.url}")
 
-    news_results = await client.news_search("Python programming", max_results=5)
-    print(f"News results: {len(news_results.results)}")
-
-    summary = await client.summarize("https://python.org", summary_type="takeaway")
+    # Summarization
+    summary = await client.summarize(
+        url="https://python.org",
+        engine="cecil",
+        summary_type="takeaway",
+    )
     print(f"Summary: {summary}")
 
 

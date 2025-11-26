@@ -27,7 +27,6 @@ WebSearchProviderName = Literal[
 NewsSearchProviderName = Literal[
     "brave",
     "dataforseo",
-    "kagi",
     "serpapi",
     "serper",
     "tavily",
@@ -227,8 +226,8 @@ class JigsawStackConfig(BaseSearchProviderConfig):
 class KagiConfig(BaseSearchProviderConfig):
     """Kagi provider configuration.
 
-    Uses the Kagi API for web and news search.
-    Also supports summarization.
+    Uses the Kagi API for web search.
+    Also supports summarization via the Universal Summarizer.
     """
 
     type: Literal["kagi"] = Field("kagi", init=False)
@@ -468,12 +467,6 @@ WebSearchProviderConfig = Annotated[
 
 # Union type for news search provider configurations (subset that supports news)
 NewsSearchProviderConfig = Annotated[
-    BraveSearchConfig
-    | DataForSEOConfig
-    | KagiConfig
-    | SerpAPIConfig
-    | SerperConfig
-    | TavilyConfig
-    | YouConfig,
+    BraveSearchConfig | DataForSEOConfig | SerpAPIConfig | SerperConfig | TavilyConfig | YouConfig,
     Field(discriminator="type"),
 ]
