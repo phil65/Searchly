@@ -50,6 +50,7 @@ dev = [
   "devtools",
   "pyreadline3",
   "pytest",
+  "pytest-asyncio",
   "pytest-cov",
   # Only add below (Copier)
 ]
