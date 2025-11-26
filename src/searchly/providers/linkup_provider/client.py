@@ -84,7 +84,7 @@ class AsyncLinkUpClient(WebSearchProvider):
             WebSearchResult(
                 title=item.get("name", ""),
                 url=item.get("url", ""),
-                snippet=item.get("content", "")[:500] if item.get("content") else "",
+                snippet=item.get("content", "") if item.get("content") else "",
             )
             for item in data.get("results", [])
             if item.get("url")
