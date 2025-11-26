@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Literal, Protocol, runtime_checkable
 
-from pydantic import BaseModel
+from schemez import Schema
 
 
 # ISO 3166-1 alpha-2 country codes (common subset)
@@ -105,7 +105,7 @@ DATAFORSEO_COUNTRY_MAP: dict[str, int] = {
 }
 
 
-class WebSearchResult(BaseModel):
+class WebSearchResult(Schema):
     """Individual web search result."""
 
     title: str
@@ -113,7 +113,7 @@ class WebSearchResult(BaseModel):
     snippet: str
 
 
-class NewsSearchResult(BaseModel):
+class NewsSearchResult(Schema):
     """Individual news search result."""
 
     title: str
@@ -123,13 +123,13 @@ class NewsSearchResult(BaseModel):
     published: str | None = None
 
 
-class WebSearchResponse(BaseModel):
+class WebSearchResponse(Schema):
     """Unified web search response."""
 
     results: list[WebSearchResult]
 
 
-class NewsSearchResponse(BaseModel):
+class NewsSearchResponse(Schema):
     """Unified news search response."""
 
     results: list[NewsSearchResult]
