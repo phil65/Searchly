@@ -201,7 +201,7 @@ class AsyncYouClient:
         return NewsResponse(**response)
 
 
-async def example():
+async def example() -> None:
     """Example usage of AsyncYouClient."""
     client = AsyncYouClient()
 

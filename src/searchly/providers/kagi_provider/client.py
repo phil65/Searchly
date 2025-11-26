@@ -162,7 +162,7 @@ class AsyncKagiClient:
         return data.get("data", {}).get("output", "")
 
 
-async def example():
+async def example() -> None:
     """Example usage of AsyncKagiClient."""
     client = AsyncKagiClient()
 

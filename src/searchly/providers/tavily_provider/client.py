@@ -247,7 +247,7 @@ class AsyncTavilyClient:
 if __name__ == "__main__":
     import asyncio
 
-    async def example():
+    async def example() -> None:
         """Example usage of SerperTool."""
         client = AsyncTavilyClient()
         results = await client.search("Python programming")

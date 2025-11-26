@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING, Literal
 
-import brave_search_python_client as brave
+import brave_search_python_client as brave  # type: ignore[import-untyped]
 
 
 if TYPE_CHECKING:
@@ -109,7 +109,7 @@ class AsyncBraveSearch:
                 )
 
 
-async def example():
+async def example() -> None:
     """Example usage of AsyncBraveSearch."""
     client = AsyncBraveSearch()
     results = await client.search("Python programming")

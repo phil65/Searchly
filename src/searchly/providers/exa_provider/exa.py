@@ -159,7 +159,7 @@ class AsyncExaClient:
         )
 
 
-async def example():
+async def example() -> None:
     """Example usage of AsyncExaClient."""
     client = AsyncExaClient()
     results = await client.search(

@@ -263,7 +263,7 @@ class AsyncDataForSEOClient:
         raise ValueError(msg)
 
 
-async def example():
+async def example() -> None:
     """Example usage of AsyncDataForSEOClient."""
     client = AsyncDataForSEOClient()
     results = await client.search(

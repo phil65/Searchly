@@ -41,7 +41,7 @@ def get_max_items_from_list(
     return result
 
 
-def save_results_to_file(results: dict):
+def save_results_to_file(results: dict) -> None:
     """Save results to a file with timestamp in filename.
 
     Args:

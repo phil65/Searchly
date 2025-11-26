@@ -96,7 +96,7 @@ class AsyncLinkUpClient:
         )
 
 
-async def example():
+async def example() -> None:
     """Example usage of AsyncLinkUpClient."""
     client = AsyncLinkUpClient()
     results = await client.search(

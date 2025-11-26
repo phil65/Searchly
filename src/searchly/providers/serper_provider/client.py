@@ -281,7 +281,7 @@ class SerperTool:
 if __name__ == "__main__":
     import asyncio
 
-    async def example():
+    async def example() -> None:
         """Example usage of SerperTool."""
         tool = SerperTool()
         results = await tool.search("Python programming")

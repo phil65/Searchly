@@ -97,7 +97,7 @@ class AsyncJigsawStackClient:
 if __name__ == "__main__":
     import anyenv
 
-    async def example():
+    async def example() -> None:
         """Example usage of AsyncJigsawStackClient."""
         client = AsyncJigsawStackClient()
         results = await client.search("What is the capital of France?")

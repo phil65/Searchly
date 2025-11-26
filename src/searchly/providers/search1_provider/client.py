@@ -122,7 +122,7 @@ class AsyncSearch1API:
         return Search1APIResponse(**data)
 
 
-async def example():
+async def example() -> None:
     """Example usage of AsyncSearch1API."""
     client = AsyncSearch1API()
     results = await client.search(

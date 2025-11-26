@@ -233,7 +233,7 @@ class AsyncSerpAPIClient:
         )
 
 
-async def example():
+async def example() -> None:
     """Example usage of AsyncSerpAPIClient."""
     client = AsyncSerpAPIClient()
 
