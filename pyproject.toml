@@ -1,6 +1,6 @@
 [project]
 name = "searchly"
-version = "2.0.0"
+version = "2.0.1"
 description = "Search tools for agents"
 readme = "README.md"
 requires-python = ">=3.13"
