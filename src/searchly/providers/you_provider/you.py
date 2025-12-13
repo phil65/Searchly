@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
 import anyenv
 
 from searchly.base import (
+    CountryCode,  # noqa: TC001
+    LanguageCode,  # noqa: TC001
     NewsSearchProvider,
     NewsSearchResponse,
     NewsSearchResult,
@@ -15,10 +17,6 @@ from searchly.base import (
     WebSearchResponse,
     WebSearchResult,
 )
-
-
-if TYPE_CHECKING:
-    from searchly.base import CountryCode, LanguageCode
 
 
 SafeSearchLevel = Literal["off", "moderate", "strict"]

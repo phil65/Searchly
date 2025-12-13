@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence  # noqa: TC003
 import contextlib
 import os
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
 import anyenv
 import httpx
 
 from searchly.base import (
+    CountryCode,  # noqa: TC001
+    LanguageCode,  # noqa: TC001
     NewsSearchProvider,
     NewsSearchResponse,
     NewsSearchResult,
@@ -18,12 +21,6 @@ from searchly.base import (
     WebSearchResult,
 )
 from searchly.exceptions import InvalidAPIKeyError, MissingAPIKeyError, UsageLimitExceededError
-
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
-
-    from searchly.base import CountryCode, LanguageCode
 
 
 SearchDepth = Literal["basic", "advanced"]
