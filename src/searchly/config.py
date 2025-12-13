@@ -5,11 +5,25 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING, Annotated, Literal
 
-from pydantic import ConfigDict, Field, SecretStr
+from pydantic import Field, SecretStr
 from schemez import Schema
 
 
-# Provider name literals for type-safe configuration
+if TYPE_CHECKING:
+    from searchly.base import NewsSearchProvider, WebSearchProvider
+    from searchly.providers.brave_provider.client import AsyncBraveSearch
+    from searchly.providers.dataforseo_provider.dataforseo import AsyncDataForSEOClient
+    from searchly.providers.exa_provider.exa import AsyncExaClient
+    from searchly.providers.jigsawstack_provider.jigsawstack import AsyncJigsawStackClient
+    from searchly.providers.kagi_provider.client import AsyncKagiClient
+    from searchly.providers.linkup_provider.client import AsyncLinkUpClient
+    from searchly.providers.search1_provider.client import AsyncSearch1API
+    from searchly.providers.serpapi_provider.client import AsyncSerpAPIClient
+    from searchly.providers.serper_provider.client import AsyncSerperClient
+    from searchly.providers.tavily_provider.client import AsyncTavilyClient
+    from searchly.providers.you_provider.you import AsyncYouClient
+
+
 WebSearchProviderName = Literal[
     "brave",
     "dataforseo",
@@ -24,28 +38,7 @@ WebSearchProviderName = Literal[
     "you",
 ]
 
-NewsSearchProviderName = Literal[
-    "brave",
-    "dataforseo",
-    "serpapi",
-    "serper",
-    "tavily",
-    "you",
-]
-
-
-if TYPE_CHECKING:
-    from searchly.providers.brave_provider.client import AsyncBraveSearch
-    from searchly.providers.dataforseo_provider.dataforseo import AsyncDataForSEOClient
-    from searchly.providers.exa_provider.exa import AsyncExaClient
-    from searchly.providers.jigsawstack_provider.jigsawstack import AsyncJigsawStackClient
-    from searchly.providers.kagi_provider.client import AsyncKagiClient
-    from searchly.providers.linkup_provider.client import AsyncLinkUpClient
-    from searchly.providers.search1_provider.client import AsyncSearch1API
-    from searchly.providers.serpapi_provider.client import AsyncSerpAPIClient
-    from searchly.providers.serper_provider.client import AsyncSerperClient
-    from searchly.providers.tavily_provider.client import AsyncTavilyClient
-    from searchly.providers.you_provider.you import AsyncYouClient
+NewsSearchProviderName = Literal["brave", "dataforseo", "serpapi", "serper", "tavily", "you"]
 
 
 class BaseSearchProviderConfig(Schema):
@@ -54,9 +47,15 @@ class BaseSearchProviderConfig(Schema):
     type: str = Field(init=False)
     """Search provider type."""
 
-    model_config = ConfigDict(use_attribute_docstrings=True, extra="forbid")
-
     def is_configured(self) -> bool:
+        """Check if the provider has required credentials configured.
+
+        Returns:
+            True if credentials are set via field or environment variable.
+        """
+        raise NotImplementedError
+
+    def get_provider(self) -> WebSearchProvider | NewsSearchProvider:
         """Check if the provider has required credentials configured.
 
         Returns:
@@ -73,28 +72,15 @@ class BraveSearchConfig(BaseSearchProviderConfig):
     """
 
     type: Literal["brave"] = Field("brave", init=False)
+    """Brave Search provider."""
 
-    api_key: SecretStr | None = Field(
-        default=None,
-        title="API Key",
-        description="Brave Search API key. Defaults to BRAVE_API_KEY env var.",
-    )
-    """Brave Search API key."""
+    api_key: SecretStr | None = Field(default=None, title="API Key")
+    """Brave Search API key. Defaults to BRAVE_API_KEY env var."""
 
-    retries: int = Field(
-        default=0,
-        ge=0,
-        title="Retries",
-        examples=[0, 3, 5],
-    )
+    retries: int = Field(default=0, ge=0, title="Retries", examples=[0, 3, 5])
     """Number of retries for failed requests."""
 
-    wait_time: int = Field(
-        default=2,
-        ge=0,
-        title="Wait Time",
-        examples=[1, 2, 5],
-    )
+    wait_time: int = Field(default=2, ge=0, title="Wait Time", examples=[1, 2, 5])
     """Time to wait between retries in seconds."""
 
     def is_configured(self) -> bool:
@@ -121,25 +107,15 @@ class DataForSEOConfig(BaseSearchProviderConfig):
     """
 
     type: Literal["dataforseo"] = Field("dataforseo", init=False)
+    """DataForSEO provider."""
 
-    login: SecretStr | None = Field(
-        default=None,
-        title="Login",
-        description="DataForSEO login. Defaults to DATAFORSEO_LOGIN env var.",
-    )
-    """DataForSEO login."""
+    login: SecretStr | None = Field(default=None, title="Login")
+    """DataForSEO login. Defaults to DATAFORSEO_LOGIN env var."""
 
-    password: SecretStr | None = Field(
-        default=None,
-        title="Password",
-        description="DataForSEO password. Defaults to DATAFORSEO_PASSWORD env var.",
-    )
-    """DataForSEO password."""
+    password: SecretStr | None = Field(default=None, title="Password")
+    """DataForSEO password. Defaults to DATAFORSEO_PASSWORD env var."""
 
-    base_url: str = Field(
-        default="https://api.dataforseo.com/v3",
-        title="Base URL",
-    )
+    base_url: str = Field(default="https://api.dataforseo.com/v3", title="Base URL")
     """Base URL for the API."""
 
     def is_configured(self) -> bool:
@@ -169,13 +145,10 @@ class ExaConfig(BaseSearchProviderConfig):
     """
 
     type: Literal["exa"] = Field("exa", init=False)
+    """Exa provider."""
 
-    api_key: SecretStr | None = Field(
-        default=None,
-        title="API Key",
-        description="Exa API key. Defaults to EXA_API_KEY env var.",
-    )
-    """Exa API key."""
+    api_key: SecretStr | None = Field(default=None, title="API Key")
+    """Exa API key. Defaults to EXA_API_KEY env var."""
 
     def is_configured(self) -> bool:
         """Check if Exa credentials are configured."""
@@ -197,18 +170,12 @@ class JigsawStackConfig(BaseSearchProviderConfig):
     """
 
     type: Literal["jigsawstack"] = Field("jigsawstack", init=False)
+    """JigsawStack provider."""
 
-    api_key: SecretStr | None = Field(
-        default=None,
-        title="API Key",
-        description="JigsawStack API key. Defaults to JIGSAWSTACK_API_KEY env var.",
-    )
-    """JigsawStack API key."""
+    api_key: SecretStr | None = Field(default=None, title="API Key")
+    """JigsawStack API key. Defaults to JIGSAWSTACK_API_KEY env var."""
 
-    base_url: str = Field(
-        default="https://api.jigsawstack.com/v1",
-        title="Base URL",
-    )
+    base_url: str = Field(default="https://api.jigsawstack.com/v1", title="Base URL")
     """Base URL for the API."""
 
     def is_configured(self) -> bool:
@@ -231,18 +198,12 @@ class KagiConfig(BaseSearchProviderConfig):
     """
 
     type: Literal["kagi"] = Field("kagi", init=False)
+    """Kagi provider."""
 
-    api_key: SecretStr | None = Field(
-        default=None,
-        title="API Key",
-        description="Kagi API key. Defaults to KAGI_API_KEY env var.",
-    )
-    """Kagi API key."""
+    api_key: SecretStr | None = Field(default=None, title="API Key")
+    """Kagi API key. Defaults to KAGI_API_KEY env var."""
 
-    base_url: str = Field(
-        default="https://kagi.com/api/v0",
-        title="Base URL",
-    )
+    base_url: str = Field(default="https://kagi.com/api/v0", title="Base URL")
     """Base URL for the API."""
 
     def is_configured(self) -> bool:
@@ -265,18 +226,12 @@ class LinkUpConfig(BaseSearchProviderConfig):
     """
 
     type: Literal["linkup"] = Field("linkup", init=False)
+    """LinkUp provider."""
 
-    api_key: SecretStr | None = Field(
-        default=None,
-        title="API Key",
-        description="LinkUp API key. Defaults to LINKUP_API_KEY env var.",
-    )
-    """LinkUp API key."""
+    api_key: SecretStr | None = Field(default=None, title="API Key")
+    """LinkUp API key. Defaults to LINKUP_API_KEY env var."""
 
-    base_url: str = Field(
-        default="https://api.linkup.so/v1",
-        title="Base URL",
-    )
+    base_url: str = Field(default="https://api.linkup.so/v1", title="Base URL")
     """Base URL for the API."""
 
     def is_configured(self) -> bool:
@@ -299,13 +254,10 @@ class Search1Config(BaseSearchProviderConfig):
     """
 
     type: Literal["search1"] = Field("search1", init=False)
+    """Search1API provider."""
 
-    api_key: SecretStr | None = Field(
-        default=None,
-        title="API Key",
-        description="Search1API key. Defaults to SEARCH1API_KEY env var.",
-    )
-    """Search1API key."""
+    api_key: SecretStr | None = Field(default=None, title="API Key")
+    """Search1API key. Defaults to SEARCH1API_KEY env var."""
 
     base_url: str = Field(
         default="https://api.search1api.com",
@@ -333,13 +285,10 @@ class SerpAPIConfig(BaseSearchProviderConfig):
     """
 
     type: Literal["serpapi"] = Field("serpapi", init=False)
+    """SerpAPI provider."""
 
-    api_key: SecretStr | None = Field(
-        default=None,
-        title="API Key",
-        description="SerpAPI key. Defaults to SERPAPI_KEY env var.",
-    )
-    """SerpAPI key."""
+    api_key: SecretStr | None = Field(default=None, title="API Key")
+    """SerpAPI key. Defaults to SERPAPI_KEY env var."""
 
     def is_configured(self) -> bool:
         """Check if SerpAPI credentials are configured."""
@@ -361,18 +310,12 @@ class SerperConfig(BaseSearchProviderConfig):
     """
 
     type: Literal["serper"] = Field("serper", init=False)
+    """Serper provider."""
 
-    api_key: SecretStr | None = Field(
-        default=None,
-        title="API Key",
-        description="Serper.dev API key. Defaults to SERPER_API_KEY env var.",
-    )
-    """Serper.dev API key."""
+    api_key: SecretStr | None = Field(default=None, title="API Key")
+    """Serper.dev API key. Defaults to SERPER_API_KEY env var."""
 
-    base_url: str = Field(
-        default="https://google.serper.dev",
-        title="Base URL",
-    )
+    base_url: str = Field(default="https://google.serper.dev", title="Base URL")
     """Base URL for the API."""
 
     def is_configured(self) -> bool:
@@ -395,13 +338,10 @@ class TavilyConfig(BaseSearchProviderConfig):
     """
 
     type: Literal["tavily"] = Field("tavily", init=False)
+    """Tavily provider."""
 
-    api_key: SecretStr | None = Field(
-        default=None,
-        title="API Key",
-        description="Tavily API key. Defaults to TAVILY_API_KEY env var.",
-    )
-    """Tavily API key."""
+    api_key: SecretStr | None = Field(default=None, title="API Key")
+    """Tavily API key. Defaults to TAVILY_API_KEY env var."""
 
     def is_configured(self) -> bool:
         """Check if Tavily credentials are configured."""
@@ -423,18 +363,12 @@ class YouConfig(BaseSearchProviderConfig):
     """
 
     type: Literal["you"] = Field("you", init=False)
+    """You.com provider."""
 
-    api_key: SecretStr | None = Field(
-        default=None,
-        title="API Key",
-        description="You.com API key. Defaults to YOU_API_KEY env var.",
-    )
-    """You.com API key."""
+    api_key: SecretStr | None = Field(default=None, title="API Key")
+    """You.com API key. Defaults to YOU_API_KEY env var."""
 
-    base_url: str = Field(
-        default="https://api.ydc-index.io",
-        title="Base URL",
-    )
+    base_url: str = Field(default="https://api.ydc-index.io", title="Base URL")
     """Base URL for the API."""
 
     def is_configured(self) -> bool:
