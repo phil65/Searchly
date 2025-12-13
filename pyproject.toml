@@ -42,6 +42,7 @@ Issues = "https://github.com/phil65/searchly/issues"
 Source = "https://github.com/phil65/searchly"
 
 [project.optional-dependencies]
+all = ["brave-search-python-client", "psutil", "exa-py"]
 brave_search_python_client = ["brave-search-python-client", "psutil"]
 exa = ["exa-py"]
 
