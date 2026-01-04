@@ -56,10 +56,10 @@ class BaseSearchProviderConfig(Schema):
         raise NotImplementedError
 
     def get_provider(self) -> WebSearchProvider | NewsSearchProvider:
-        """Check if the provider has required credentials configured.
+        """Create the provider instance.
 
         Returns:
-            True if credentials are set via field or environment variable.
+            The configured provider instance.
         """
         raise NotImplementedError
 

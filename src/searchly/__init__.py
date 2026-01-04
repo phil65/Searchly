@@ -17,7 +17,7 @@ from searchly.base import (
     WebSearchResponse,
     WebSearchResult,
 )
-from searchly.config import (
+from searchly_config import (
     BaseSearchProviderConfig,
     BraveSearchConfig,
     DataForSEOConfig,
