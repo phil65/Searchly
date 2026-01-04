@@ -123,16 +123,16 @@ reportSelfClsParameterName = false
 reportPrivateImportUsage = false
 
 [tool.pytest]
+addopts = ["-m", "not integration"]
 log_cli = true
 log_date_format = "%Y-%m-%d %H:%M:%S"
 log_format = "%(asctime)s %(levelname)s %(message)s"
-minversion = "9.0"
-testpaths = ["tests/"]
-asyncio_mode = "auto"
-addopts = "-m 'not integration'"
 markers = [
   "integration: mark test as integration test (skipped by default)",
 ]
+minversion = "9.0"
+testpaths = ["tests/"]
+asyncio_mode = "auto"
 
 [tool.ruff]
 line-length = 100
