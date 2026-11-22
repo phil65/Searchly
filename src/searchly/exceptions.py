@@ -1,4 +1,4 @@
-"""Search tool using Serper.dev API."""
+"""Exceptions raised by search providers."""
 
 from __future__ import annotations
 
