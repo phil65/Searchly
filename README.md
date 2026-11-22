@@ -9,7 +9,6 @@
 [![Implementation](https://img.shields.io/pypi/implementation/searchly.svg)](https://pypi.org/project/searchly/)
 [![Releases](https://img.shields.io/github/downloads/phil65/searchly/total.svg)](https://github.com/phil65/searchly/releases)
 [![Github Contributors](https://img.shields.io/github/contributors/phil65/searchly)](https://github.com/phil65/searchly/graphs/contributors)
-[![Github Discussions](https://img.shields.io/github/discussions/phil65/searchly)](https://github.com/phil65/searchly/discussions)
 [![Github Forks](https://img.shields.io/github/forks/phil65/searchly)](https://github.com/phil65/searchly/forks)
 [![Github Issues](https://img.shields.io/github/issues/phil65/searchly)](https://github.com/phil65/searchly/issues)
 [![Github Issues](https://img.shields.io/github/issues-pr/phil65/searchly)](https://github.com/phil65/searchly/pulls)
