@@ -10,8 +10,8 @@ import anyenv
 
 from searchly.base import (
     DATAFORSEO_COUNTRY_MAP,
-    CountryCode,  # noqa: TC001
-    LanguageCode,  # noqa: TC001
+    CountryCode,
+    LanguageCode,
     NewsSearchProvider,
     NewsSearchResponse,
     NewsSearchResult,

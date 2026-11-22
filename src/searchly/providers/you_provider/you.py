@@ -8,8 +8,8 @@ from typing import Any, Literal
 import anyenv
 
 from searchly.base import (
-    CountryCode,  # noqa: TC001
-    LanguageCode,  # noqa: TC001
+    CountryCode,
+    LanguageCode,
     NewsSearchProvider,
     NewsSearchResponse,
     NewsSearchResult,

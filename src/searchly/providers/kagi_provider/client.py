@@ -8,8 +8,8 @@ from typing import Any, Literal
 import anyenv
 
 from searchly.base import (
-    CountryCode,  # noqa: TC001
-    LanguageCode,  # noqa: TC001
+    CountryCode,
+    LanguageCode,
     WebSearchProvider,
     WebSearchResponse,
     WebSearchResult,
@@ -142,7 +142,7 @@ class AsyncKagiClient(WebSearchProvider):
         data = await anyenv.get_json(
             endpoint, params=params, headers=self.headers, return_type=dict
         )
-        return data.get("data", {}).get("output", "")  # type: ignore[no-any-return]
+        return data.get("data", {}).get("output", "")
 
 
 async def example() -> None:

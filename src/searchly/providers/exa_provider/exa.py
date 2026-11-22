@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from searchly.base import (
-    CountryCode,  # noqa: TC001
-    LanguageCode,  # noqa: TC001
+    CountryCode,
+    LanguageCode,
     WebSearchProvider,
     WebSearchResponse,
     WebSearchResult,
 )
+
+
+if TYPE_CHECKING:
+    from exa_py.api import Category, ContentsOptions
 
 
 class AsyncExaClient(WebSearchProvider):
@@ -81,17 +85,20 @@ class AsyncExaClient(WebSearchProvider):
         if max_characters is not None:
             text_opts = {"max_characters": max_characters}
 
-        response = await self.client.search_and_contents(
+        contents: dict[str, Any] = {"text": text_opts}
+        if summary:
+            contents["summary"] = summary
+
+        response = await self.client.search(
             query=query,
-            text=text_opts,
-            summary=summary,
+            contents=cast("ContentsOptions", contents),
             num_results=max_results,
             include_domains=include_domains,
             exclude_domains=exclude_domains,
             start_published_date=start_published_date,
             end_published_date=end_published_date,
             type=search_type,
-            category=category,
+            category=cast("Category | None", category),
             **kwargs,
         )
 

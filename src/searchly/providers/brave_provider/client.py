@@ -6,8 +6,8 @@ import os
 from typing import Any, cast
 
 from searchly.base import (
-    CountryCode,  # noqa: TC001
-    LanguageCode,  # noqa: TC001
+    CountryCode,
+    LanguageCode,
     NewsSearchProvider,
     NewsSearchResponse,
     NewsSearchResult,
@@ -34,7 +34,7 @@ class AsyncBraveSearch(WebSearchProvider, NewsSearchProvider):
             retries: Number of retries for failed requests.
             wait_time: Time to wait between retries in seconds.
         """
-        import brave_search_python_client as brave  # type: ignore[import-untyped]
+        import brave_search_python_client as brave
 
         self.api_key = api_key or os.getenv("BRAVE_API_KEY")
         if not self.api_key:
