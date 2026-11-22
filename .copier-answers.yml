@@ -15,7 +15,7 @@ python_minimum_version: '3.13'
 python_package_command_line_name: searchly
 python_package_distribution_name: searchly
 python_package_import_name: searchly
-repository_name: searchly
+repository_name: Searchly
 repository_namespace: phil65
 repository_provider: github.com
 
