@@ -29,9 +29,10 @@ classifiers = [
 dependencies = [
   "anyenv[httpx]>=0.4.4",
   "pydantic",
+
   # Only add below (Copier)
+  "httpx>=0.27.0",
   "schemez>=2.1.5",
-  "universal-pathlib>=0.2.6",
 ]
 
 [project.urls]
