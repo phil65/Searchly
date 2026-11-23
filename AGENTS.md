@@ -20,7 +20,7 @@ configs that build clients lazily).
 - `src/searchly/providers/<name>_provider/`: one client per API. Each class subclasses the
   protocol(s) it implements, reads its API key from a constructor arg or an env var, and maps
   the API's response onto the unified models. Most talk HTTP via `anyenv` (`anyenv.post_json`
-  etc.); Tavily uses `httpx` directly; Brave and Exa wrap third-party SDKs (optional extras).
+  etc.); Tavily uses `httpx2` directly; Brave and Exa wrap third-party SDKs (optional extras).
   Every client module ends with an `example()` coroutine runnable via `python -m`.
   - Web + news: `brave_provider/client.py`, `dataforseo_provider/dataforseo.py`,
     `serpapi_provider/client.py`, `serper_provider/client.py`, `tavily_provider/client.py`,

@@ -8,7 +8,7 @@ import os
 from typing import Any, Literal
 
 import anyenv
-import httpx
+import httpx2
 
 from searchly.base import (
     CountryCode,
@@ -49,8 +49,10 @@ class AsyncTavilyClient(WebSearchProvider, NewsSearchProvider):
         self.base_url = "https://api.tavily.com"
         self.timeout = 180
 
-    def _client_creator(self) -> httpx.AsyncClient:
-        return httpx.AsyncClient(headers=self.headers, base_url=self.base_url, timeout=self.timeout)
+    def _client_creator(self) -> httpx2.AsyncClient:
+        return httpx2.AsyncClient(
+            headers=self.headers, base_url=self.base_url, timeout=self.timeout
+        )
 
     async def _search(
         self,
