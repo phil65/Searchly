@@ -54,6 +54,17 @@ Documentation = "https://phil65.github.io/Searchly/"
 Homepage = "https://phil65.github.io/Searchly/"
 Issues = "https://github.com/phil65/Searchly/issues"
 Source = "https://github.com/phil65/Searchly"
+"Spec: Brave Search" = "https://api-dashboard.search.brave.com/app/documentation/web-search/get-started"
+"Spec: DataForSEO" = "https://docs.dataforseo.com/v3/serp/google/organic/live/advanced/"
+"Spec: Exa" = "https://docs.exa.ai/reference/search"
+"Spec: JigsawStack" = "https://jigsawstack.com/docs/api-reference/web/ai-search"
+"Spec: Kagi" = "https://help.kagi.com/kagi/api/search.html"
+"Spec: Linkup" = "https://docs.linkup.so/pages/documentation/api-reference/endpoint/post-search"
+"Spec: Search1API" = "https://www.search1api.com/docs"
+"Spec: SerpApi" = "https://serpapi.com/search-api"
+"Spec: Serper" = "https://serper.dev"
+"Spec: Tavily" = "https://docs.tavily.com/documentation/api-reference/endpoint/search"
+"Spec: You.com" = "https://docs.you.com/api-reference/search/v1-search"
 
 [project.optional-dependencies]
 all = ["brave-search-python-client", "psutil", "exa-py>=2.0.0"]

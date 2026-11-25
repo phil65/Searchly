@@ -76,6 +76,24 @@ uv build
 - Optional SDKs (`brave_search_python_client`, `exa_py`) are imported inside `__init__`, so
   `import searchly` works without the extras; instantiating the client then raises `ImportError`.
 
+## Specs
+
+Per-provider REST APIs. None is pinned to an API version beyond the path prefix in the base URL; all track latest.
+
+| Spec | URL | Targets | Code | Update check |
+|---|---|---|---|---|
+| Brave Search API (via `brave-search-python-client`) | https://api-dashboard.search.brave.com/app/documentation/web-search/get-started | unpinned (tracks latest SDK) | `src/searchly/providers/brave_provider/` | same URL, SDK releases on PyPI |
+| DataForSEO SERP API (Google organic / news live advanced) | https://docs.dataforseo.com/v3/serp/google/organic/live/advanced/ | API v3 (`https://api.dataforseo.com/v3`) | `src/searchly/providers/dataforseo_provider/` | same URL |
+| Exa search (via `exa-py>=2.0.0`) | https://docs.exa.ai/reference/search | unpinned (tracks latest SDK) | `src/searchly/providers/exa_provider/` | same URL, `exa-py` releases on PyPI |
+| JigsawStack AI web search | https://jigsawstack.com/docs/api-reference/web/ai-search | API v1 (`https://api.jigsawstack.com/v1`) | `src/searchly/providers/jigsawstack_provider/` | same URL |
+| Kagi Search + Summarizer API | https://help.kagi.com/kagi/api/search.html | API v0 (`https://kagi.com/api/v0`) | `src/searchly/providers/kagi_provider/` | same URL, https://help.kagi.com/kagi/api/summarizer.html |
+| Linkup search | https://docs.linkup.so/pages/documentation/api-reference/endpoint/post-search | API v1 (`https://api.linkup.so/v1`) | `src/searchly/providers/linkup_provider/` | same URL |
+| Search1API | https://www.search1api.com/docs | unpinned (tracks latest) | `src/searchly/providers/search1_provider/` | same URL |
+| SerpApi Google Search | https://serpapi.com/search-api | unpinned (tracks latest) | `src/searchly/providers/serpapi_provider/` | same URL |
+| Serper (Google search / news) | https://serper.dev | unpinned (tracks latest; no public reference beyond the playground) | `src/searchly/providers/serper_provider/` | same URL |
+| Tavily search | https://docs.tavily.com/documentation/api-reference/endpoint/search | unpinned (tracks latest) | `src/searchly/providers/tavily_provider/` | same URL |
+| You.com search / news | https://docs.you.com/api-reference/search/v1-search | unpinned (`https://api.ydc-index.io`) | `src/searchly/providers/you_provider/` | same URL |
+
 ## Pitfalls
 
 - Copier-managed project (`.copier-answers.yml`, template `copier-phil65`): workflows,
