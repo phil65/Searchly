@@ -57,7 +57,7 @@ uv run pytest                        # unit tests (integration tests deselected)
 uv run pytest -m integration         # live API tests; each skips without its API key
 uvx ruff check . && uvx ruff format --check .
 uv run ty check                      # type check (src only); warnings fail CI
-uv run mkdocs-mknodes build          # docs (or `duty build` / `duty serve`)
+uv run mknodes build                 # docs (or `duty build` / `duty serve`)
 uv run deptry src                    # dependency hygiene
 uv build
 ```
@@ -110,5 +110,5 @@ Per-provider REST APIs. None is pinned to an API version beyond the path prefix 
   without declaring it; deptry flags it as DEP002, that's expected). Exa needs the `exa` extra
   (`exa-py>=2.0`, uses `AsyncExa.search(contents=...)`).
 - `ty` checks with all extras installed; keep `# ty: ignore[...]` targeted. Mypy is no longer used.
-- Docs are the mkdocs-mknodes default site: `README.md` is the index page, API pages are
+- Docs are the mknodes default site: `README.md` is the index page, API pages are
   generated from docstrings. `docs/` is empty on purpose.
