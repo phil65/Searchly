@@ -67,7 +67,7 @@ uv build
 
 ## Conventions
 
-- Python >= 3.13, `from __future__ import annotations`, full type hints, Google-style docstrings.
+- Python >= 3.14, no `from __future__ import annotations` (PEP 649; banned via ruff TID251), full type hints, Google-style docstrings.
 - Ruff with a large rule set (`pyproject.toml`), line length 100, preview formatting.
 - All clients are async; constructor args are keyword-only; API key falls back to an env var
   and a missing key raises `ValueError` (Tavily: `MissingAPIKeyError`).
