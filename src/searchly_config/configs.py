@@ -85,7 +85,7 @@ class BraveSearchConfig(BaseSearchProviderConfig):
 
     def is_configured(self) -> bool:
         """Check if Brave Search credentials are configured."""
-        return self.api_key is not None or os.getenv("BRAVE_API_KEY") is not None
+        return self.api_key is not None or bool(os.getenv("BRAVE_API_KEY"))
 
     def get_provider(self) -> AsyncBraveSearch:
         """Create Brave Search provider instance."""
@@ -120,8 +120,8 @@ class DataForSEOConfig(BaseSearchProviderConfig):
 
     def is_configured(self) -> bool:
         """Check if DataForSEO credentials are configured."""
-        has_login = self.login is not None or os.getenv("DATAFORSEO_LOGIN") is not None
-        has_password = self.password is not None or os.getenv("DATAFORSEO_PASSWORD") is not None
+        has_login = self.login is not None or bool(os.getenv("DATAFORSEO_LOGIN"))
+        has_password = self.password is not None or bool(os.getenv("DATAFORSEO_PASSWORD"))
         return has_login and has_password
 
     def get_provider(self) -> AsyncDataForSEOClient:
@@ -152,7 +152,7 @@ class ExaConfig(BaseSearchProviderConfig):
 
     def is_configured(self) -> bool:
         """Check if Exa credentials are configured."""
-        return self.api_key is not None or os.getenv("EXA_API_KEY") is not None
+        return self.api_key is not None or bool(os.getenv("EXA_API_KEY"))
 
     def get_provider(self) -> AsyncExaClient:
         """Create Exa provider instance."""
@@ -180,7 +180,7 @@ class JigsawStackConfig(BaseSearchProviderConfig):
 
     def is_configured(self) -> bool:
         """Check if JigsawStack credentials are configured."""
-        return self.api_key is not None or os.getenv("JIGSAWSTACK_API_KEY") is not None
+        return self.api_key is not None or bool(os.getenv("JIGSAWSTACK_API_KEY"))
 
     def get_provider(self) -> AsyncJigsawStackClient:
         """Create JigsawStack provider instance."""
@@ -208,7 +208,7 @@ class KagiConfig(BaseSearchProviderConfig):
 
     def is_configured(self) -> bool:
         """Check if Kagi credentials are configured."""
-        return self.api_key is not None or os.getenv("KAGI_API_KEY") is not None
+        return self.api_key is not None or bool(os.getenv("KAGI_API_KEY"))
 
     def get_provider(self) -> AsyncKagiClient:
         """Create Kagi provider instance."""
@@ -236,7 +236,7 @@ class LinkUpConfig(BaseSearchProviderConfig):
 
     def is_configured(self) -> bool:
         """Check if LinkUp credentials are configured."""
-        return self.api_key is not None or os.getenv("LINKUP_API_KEY") is not None
+        return self.api_key is not None or bool(os.getenv("LINKUP_API_KEY"))
 
     def get_provider(self) -> AsyncLinkUpClient:
         """Create LinkUp provider instance."""
@@ -267,7 +267,7 @@ class Search1Config(BaseSearchProviderConfig):
 
     def is_configured(self) -> bool:
         """Check if Search1API credentials are configured."""
-        return self.api_key is not None or os.getenv("SEARCH1API_KEY") is not None
+        return self.api_key is not None or bool(os.getenv("SEARCH1API_KEY"))
 
     def get_provider(self) -> AsyncSearch1API:
         """Create Search1API provider instance."""
@@ -292,7 +292,7 @@ class SerpAPIConfig(BaseSearchProviderConfig):
 
     def is_configured(self) -> bool:
         """Check if SerpAPI credentials are configured."""
-        return self.api_key is not None or os.getenv("SERPAPI_KEY") is not None
+        return self.api_key is not None or bool(os.getenv("SERPAPI_KEY"))
 
     def get_provider(self) -> AsyncSerpAPIClient:
         """Create SerpAPI provider instance."""
@@ -320,7 +320,7 @@ class SerperConfig(BaseSearchProviderConfig):
 
     def is_configured(self) -> bool:
         """Check if Serper credentials are configured."""
-        return self.api_key is not None or os.getenv("SERPER_API_KEY") is not None
+        return self.api_key is not None or bool(os.getenv("SERPER_API_KEY"))
 
     def get_provider(self) -> AsyncSerperClient:
         """Create Serper provider instance."""
@@ -345,7 +345,7 @@ class TavilyConfig(BaseSearchProviderConfig):
 
     def is_configured(self) -> bool:
         """Check if Tavily credentials are configured."""
-        return self.api_key is not None or os.getenv("TAVILY_API_KEY") is not None
+        return self.api_key is not None or bool(os.getenv("TAVILY_API_KEY"))
 
     def get_provider(self) -> AsyncTavilyClient:
         """Create Tavily provider instance."""
@@ -373,7 +373,7 @@ class YouConfig(BaseSearchProviderConfig):
 
     def is_configured(self) -> bool:
         """Check if You.com credentials are configured."""
-        return self.api_key is not None or os.getenv("YOU_API_KEY") is not None
+        return self.api_key is not None or bool(os.getenv("YOU_API_KEY"))
 
     def get_provider(self) -> AsyncYouClient:
         """Create You.com provider instance."""

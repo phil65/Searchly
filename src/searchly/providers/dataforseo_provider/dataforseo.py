@@ -19,10 +19,36 @@ from searchly.base import (
     WebSearchResponse,
     WebSearchResult,
 )
+from searchly.exceptions import SearchProviderError
 
 
 OSType = Literal["windows", "macos", "android", "ios"]
 DeviceType = Literal["desktop", "mobile", "tablet"]
+
+OK_STATUS = 20000
+
+
+def _check_status(obj: dict[str, Any]) -> None:
+    """Raise if a DataForSEO response or task reports an error.
+
+    DataForSEO answers most errors (no credits, invalid field, no access) with HTTP 200 and
+    an error `status_code` in the body, with `result: null`.
+    """
+    code = obj.get("status_code")
+    if code is not None and code != OK_STATUS:
+        msg = f"DataForSEO error {code}: {obj.get('status_message', '')}"
+        raise SearchProviderError(msg)
+
+
+def _task_items(data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return the first task's result items, raising on a failed request or task."""
+    _check_status(data)
+    if not (tasks := data.get("tasks")):
+        return []
+    _check_status(tasks[0])
+    if not (task_result := tasks[0].get("result")):
+        return []
+    return task_result[0].get("items") or []
 
 
 class AsyncDataForSEOClient(WebSearchProvider, NewsSearchProvider):
@@ -98,9 +124,7 @@ class AsyncDataForSEOClient(WebSearchProvider, NewsSearchProvider):
         url = f"{self.base_url}{endpoint}"
         data = await anyenv.post_json(url, [task], headers=self.headers, return_type=dict)
 
-        items = []
-        if (tasks := data.get("tasks")) and (task_result := tasks[0].get("result")):
-            items = task_result[0].get("items", [])
+        items = _task_items(data)
 
         results = [
             WebSearchResult(
@@ -155,9 +179,7 @@ class AsyncDataForSEOClient(WebSearchProvider, NewsSearchProvider):
         url = f"{self.base_url}{endpoint}"
         data = await anyenv.post_json(url, [task], headers=self.headers, return_type=dict)
 
-        items = []
-        if (tasks := data.get("tasks")) and (task_result := tasks[0].get("result")):
-            items = task_result[0].get("items", [])
+        items = _task_items(data)
 
         results = [
             NewsSearchResult(

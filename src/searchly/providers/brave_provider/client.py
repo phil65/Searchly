@@ -17,6 +17,11 @@ from searchly.base import (
 )
 
 
+# Upper bounds of Brave's `count` per request (its request models reject more).
+MAX_WEB_COUNT = 20
+MAX_NEWS_COUNT = 50
+
+
 class AsyncBraveSearch(WebSearchProvider, NewsSearchProvider):
     """Async client for Brave Search API."""
 
@@ -58,7 +63,7 @@ class AsyncBraveSearch(WebSearchProvider, NewsSearchProvider):
 
         Args:
             query: Search query string.
-            max_results: Maximum number of results to return.
+            max_results: Maximum number of results to return (Brave returns at most 20).
             country: Country code for regional results (ISO 3166-1 alpha-2).
             language: Language code for results (ISO 639-1).
             **kwargs: Additional Brave-specific options.
@@ -70,7 +75,7 @@ class AsyncBraveSearch(WebSearchProvider, NewsSearchProvider):
 
         req = brave.WebSearchRequest(
             q=query,
-            count=max_results,
+            count=min(max_results, MAX_WEB_COUNT),
             country=cast("brave.CountryCode | None", country),
             search_lang=language,
             **kwargs,
@@ -100,7 +105,7 @@ class AsyncBraveSearch(WebSearchProvider, NewsSearchProvider):
 
         Args:
             query: Search query string.
-            max_results: Maximum number of results to return.
+            max_results: Maximum number of results to return (Brave returns at most 50).
             country: Country code for regional results (ISO 3166-1 alpha-2).
             language: Language code for results (ISO 639-1).
             **kwargs: Additional Brave-specific options.
@@ -112,7 +117,7 @@ class AsyncBraveSearch(WebSearchProvider, NewsSearchProvider):
 
         req = brave.NewsSearchRequest(
             q=query,
-            count=max_results,
+            count=min(max_results, MAX_NEWS_COUNT),
             country=cast("brave.CountryCode | None", country),
             search_lang=language,
             **kwargs,
