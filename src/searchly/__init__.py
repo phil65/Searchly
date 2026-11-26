@@ -3,8 +3,6 @@
 Provides unified search interfaces across multiple search providers.
 """
 
-from __future__ import annotations
-
 from importlib.metadata import version
 
 from searchly.base import (

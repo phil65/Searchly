@@ -1,7 +1,5 @@
 """Exa API client implementing search protocols."""
 
-from __future__ import annotations
-
 import os
 from typing import TYPE_CHECKING, Any, Literal, cast
 

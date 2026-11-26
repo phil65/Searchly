@@ -1,7 +1,5 @@
 """Base protocols and types for search providers."""
 
-from __future__ import annotations
-
 from typing import Any, Literal, Protocol, runtime_checkable
 
 from schemez import Schema

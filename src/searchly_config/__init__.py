@@ -4,8 +4,6 @@ This is a lightweight config-only package for fast imports.
 For the actual search providers, use `from searchly import ...`.
 """
 
-from __future__ import annotations
-
 from searchly_config.configs import (
     BaseSearchProviderConfig,
     BraveSearchConfig,

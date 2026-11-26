@@ -1,7 +1,5 @@
 """Unit tests for provider edge cases (no network, no API keys)."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import pytest

@@ -1,7 +1,5 @@
 """Tavily API client implementing search protocols."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence  # noqa: TC003
 import contextlib
 import os

@@ -1,7 +1,5 @@
 """Exceptions raised by search providers."""
 
-from __future__ import annotations
-
 
 class SearchProviderError(Exception):
     """Raised when a provider reports an error in an otherwise successful response."""
