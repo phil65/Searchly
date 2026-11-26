@@ -3,8 +3,6 @@
 import os
 from typing import Any, Literal
 
-import anyenv
-
 from searchly.base import (
     CountryCode,
     LanguageCode,
@@ -12,13 +10,14 @@ from searchly.base import (
     WebSearchResponse,
     WebSearchResult,
 )
+from searchly.http import HttpSessionMixin
 
 
 TimeRange = Literal["day", "week", "month", "year"]
 SearchService = Literal["google", "bing"]
 
 
-class AsyncSearch1API(WebSearchProvider):
+class AsyncSearch1API(HttpSessionMixin, WebSearchProvider):
     """Async client for Search1API.
 
     Note: Search1API does not support country filtering.
@@ -93,7 +92,8 @@ class AsyncSearch1API(WebSearchProvider):
         if exclude_sites:
             payload["exclude_sites"] = exclude_sites
 
-        data = await anyenv.post_json(
+        session = await self._session()
+        data = await session.post_json(
             f"{self.base_url}/search",
             headers=self.headers,
             json_data=payload,

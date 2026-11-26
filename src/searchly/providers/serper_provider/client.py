@@ -3,8 +3,6 @@
 import os
 from typing import Any, Literal
 
-import anyenv
-
 from searchly.base import (
     CountryCode,
     LanguageCode,
@@ -15,12 +13,13 @@ from searchly.base import (
     WebSearchResponse,
     WebSearchResult,
 )
+from searchly.http import HttpSessionMixin
 
 
 DateRange = Literal["h", "d", "w", "m", "y"]
 
 
-class AsyncSerperClient(WebSearchProvider, NewsSearchProvider):
+class AsyncSerperClient(HttpSessionMixin, WebSearchProvider, NewsSearchProvider):
     """Async client for Serper.dev API."""
 
     def __init__(
@@ -83,7 +82,8 @@ class AsyncSerperClient(WebSearchProvider, NewsSearchProvider):
             payload["tbs"] = f"qdr:{date_range}"
         assert self.api_key
         headers = {"X-API-KEY": self.api_key, "Content-Type": "application/json"}
-        data = await anyenv.post_json(
+        session = await self._session()
+        data = await session.post_json(
             f"{self.base_url}/search",
             headers=headers,
             json_data=payload,
@@ -141,7 +141,8 @@ class AsyncSerperClient(WebSearchProvider, NewsSearchProvider):
             payload["tbs"] = f"qdr:{date_range}"
         assert self.api_key
         headers = {"X-API-KEY": self.api_key, "Content-Type": "application/json"}
-        data = await anyenv.post_json(
+        session = await self._session()
+        data = await session.post_json(
             f"{self.base_url}/news",
             headers=headers,
             json_data=payload,

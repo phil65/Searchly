@@ -3,8 +3,6 @@
 import os
 from typing import Any, Literal
 
-import anyenv
-
 from searchly.base import (
     CountryCode,
     LanguageCode,
@@ -15,13 +13,14 @@ from searchly.base import (
     WebSearchResponse,
     WebSearchResult,
 )
+from searchly.http import HttpSessionMixin
 
 
 SafeSearchLevel = Literal["off", "moderate", "strict"]
 FreshnessFilter = Literal["day", "week", "month", "year"]
 
 
-class AsyncYouClient(WebSearchProvider, NewsSearchProvider):
+class AsyncYouClient(HttpSessionMixin, WebSearchProvider, NewsSearchProvider):
     """Async client for You.com API."""
 
     def __init__(
@@ -84,7 +83,10 @@ class AsyncYouClient(WebSearchProvider, NewsSearchProvider):
             params["freshness"] = freshness
 
         url = f"{self.base_url}/search"
-        response = await anyenv.get_json(url, headers=self.headers, params=params, return_type=dict)
+        session = await self._session()
+        response = await session.get_json(
+            url, headers=self.headers, params=params, return_type=dict
+        )
 
         results = [
             WebSearchResult(
@@ -126,7 +128,10 @@ class AsyncYouClient(WebSearchProvider, NewsSearchProvider):
             params["count"] = max_results
 
         url = f"{self.base_url}/news"
-        response = await anyenv.get_json(url, headers=self.headers, params=params, return_type=dict)
+        session = await self._session()
+        response = await session.get_json(
+            url, headers=self.headers, params=params, return_type=dict
+        )
 
         news_data = response.get("news", {})
         results = [

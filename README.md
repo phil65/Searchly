@@ -77,6 +77,10 @@ if config.is_configured():  # api_key field or TAVILY_API_KEY env var
     provider = config.get_provider()
 ```
 
+The anyenv-based clients (DataForSEO, JigsawStack, Kagi, LinkUp, Search1API, SerpAPI,
+Serper, You.com) keep one HTTP connection per instance (per event loop); close it with
+`await provider.aclose()` or use the provider as `async with provider: ...`.
+
 ## Providers
 
 | Provider | Client | Web | News | API key env var |

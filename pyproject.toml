@@ -39,7 +39,7 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "anyenv[httpx2]>=2.1.0",
+  "anyenv[httpx2]>=3.0.0",
   "pydantic",
 
   # Only add below (Copier)

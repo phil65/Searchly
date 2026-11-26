@@ -3,8 +3,6 @@
 import os
 from typing import TYPE_CHECKING, Any, Literal
 
-import anyenv
-
 from searchly.base import (
     NewsSearchProvider,
     NewsSearchResponse,
@@ -13,6 +11,7 @@ from searchly.base import (
     WebSearchResponse,
     WebSearchResult,
 )
+from searchly.http import HttpSessionMixin
 
 
 if TYPE_CHECKING:
@@ -22,7 +21,7 @@ if TYPE_CHECKING:
 TimePeriod = Literal["d", "w", "m", "y"]
 
 
-class AsyncSerpAPIClient(WebSearchProvider, NewsSearchProvider):
+class AsyncSerpAPIClient(HttpSessionMixin, WebSearchProvider, NewsSearchProvider):
     """Async client for SerpAPI."""
 
     BACKEND = "https://serpapi.com"
@@ -82,7 +81,8 @@ class AsyncSerpAPIClient(WebSearchProvider, NewsSearchProvider):
         if safe:
             params["safe"] = "active"
 
-        response = await anyenv.get_json(f"{self.BACKEND}/search", params=params, return_type=dict)
+        session = await self._session()
+        response = await session.get_json(f"{self.BACKEND}/search", params=params, return_type=dict)
 
         results = [
             WebSearchResult(
@@ -143,7 +143,8 @@ class AsyncSerpAPIClient(WebSearchProvider, NewsSearchProvider):
         if time_period:
             params["tbs"] = f"qdr:{time_period}"
 
-        response = await anyenv.get_json(f"{self.BACKEND}/search", params=params, return_type=dict)
+        session = await self._session()
+        response = await session.get_json(f"{self.BACKEND}/search", params=params, return_type=dict)
 
         results = [
             NewsSearchResult(

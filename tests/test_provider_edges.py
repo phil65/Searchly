@@ -62,7 +62,7 @@ async def test_dataforseo_raises_on_failed_task(
     async def fake_post_json(*_: Any, **__: Any) -> dict[str, Any]:
         return payload
 
-    monkeypatch.setattr(anyenv, "post_json", fake_post_json)
+    monkeypatch.setattr(anyenv.HttpSession, "post_json", fake_post_json)
     client = AsyncDataForSEOClient(login="l", password="p")
     with pytest.raises(SearchProviderError, match=r"40200|40100"):
         await getattr(client, method)("x")
@@ -77,7 +77,7 @@ async def test_dataforseo_ok_without_items(monkeypatch: pytest.MonkeyPatch):
     async def fake_post_json(*_: Any, **__: Any) -> dict[str, Any]:
         return {"status_code": 20000, "tasks": [{"status_code": 20000, "result": None}]}
 
-    monkeypatch.setattr(anyenv, "post_json", fake_post_json)
+    monkeypatch.setattr(anyenv.HttpSession, "post_json", fake_post_json)
     client = AsyncDataForSEOClient(login="l", password="p")
     assert (await client.web_search("x")).results == []
 

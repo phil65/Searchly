@@ -12,13 +12,14 @@ from searchly.base import (
     WebSearchResponse,
     WebSearchResult,
 )
+from searchly.http import HttpSessionMixin
 
 
 OutputType = Literal["sourcedAnswer", "searchResults", "structured"]
 SearchDepth = Literal["standard", "deep"]
 
 
-class AsyncLinkUpClient(WebSearchProvider):
+class AsyncLinkUpClient(HttpSessionMixin, WebSearchProvider):
     """Async client for LinkUp API.
 
     Note: LinkUp does not support country/language/max_results filtering.
@@ -74,7 +75,8 @@ class AsyncLinkUpClient(WebSearchProvider):
             Unified web search response.
         """
         payload: dict[str, Any] = {"q": query, "depth": depth, "outputType": output_type, **kwargs}
-        data = await anyenv.post_json(
+        session = await self._session()
+        data = await session.post_json(
             f"{self.base_url}/search",
             json_data=payload,
             headers=self.headers,

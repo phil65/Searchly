@@ -12,12 +12,13 @@ from searchly.base import (
     WebSearchResponse,
     WebSearchResult,
 )
+from searchly.http import HttpSessionMixin
 
 
 SafeSearchSetting = Literal["moderate", "strict", "off"]
 
 
-class AsyncJigsawStackClient(WebSearchProvider):
+class AsyncJigsawStackClient(HttpSessionMixin, WebSearchProvider):
     """Async client for JigsawStack API.
 
     Note: JigsawStack does not support country/language/max_results filtering.
@@ -79,7 +80,8 @@ class AsyncJigsawStackClient(WebSearchProvider):
             **kwargs,
         }
 
-        data = await anyenv.post_json(
+        session = await self._session()
+        data = await session.post_json(
             f"{self.base_url}/web/search",
             payload,
             headers=self.headers,

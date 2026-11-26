@@ -18,6 +18,7 @@ from searchly.base import (
     WebSearchResult,
 )
 from searchly.exceptions import SearchProviderError
+from searchly.http import HttpSessionMixin
 
 
 OSType = Literal["windows", "macos", "android", "ios"]
@@ -49,7 +50,7 @@ def _task_items(data: dict[str, Any]) -> list[dict[str, Any]]:
     return task_result[0].get("items") or []
 
 
-class AsyncDataForSEOClient(WebSearchProvider, NewsSearchProvider):
+class AsyncDataForSEOClient(HttpSessionMixin, WebSearchProvider, NewsSearchProvider):
     """Async client for DataForSEO API."""
 
     def __init__(
@@ -120,7 +121,8 @@ class AsyncDataForSEOClient(WebSearchProvider, NewsSearchProvider):
         }
 
         url = f"{self.base_url}{endpoint}"
-        data = await anyenv.post_json(url, [task], headers=self.headers, return_type=dict)
+        session = await self._session()
+        data = await session.post_json(url, [task], headers=self.headers, return_type=dict)
 
         items = _task_items(data)
 
@@ -175,7 +177,8 @@ class AsyncDataForSEOClient(WebSearchProvider, NewsSearchProvider):
         }
 
         url = f"{self.base_url}{endpoint}"
-        data = await anyenv.post_json(url, [task], headers=self.headers, return_type=dict)
+        session = await self._session()
+        data = await session.post_json(url, [task], headers=self.headers, return_type=dict)
 
         items = _task_items(data)
 

@@ -3,8 +3,6 @@
 import os
 from typing import Any, Literal
 
-import anyenv
-
 from searchly.base import (
     CountryCode,
     LanguageCode,
@@ -12,13 +10,14 @@ from searchly.base import (
     WebSearchResponse,
     WebSearchResult,
 )
+from searchly.http import HttpSessionMixin
 
 
 SummaryType = Literal["summary", "takeaway"]
 SummaryEngine = Literal["cecil", "agnes", "muriel"]
 
 
-class AsyncKagiClient(WebSearchProvider):
+class AsyncKagiClient(HttpSessionMixin, WebSearchProvider):
     """Async client for Kagi API.
 
     Note: Kagi Search API requires API billing to be set up at
@@ -76,7 +75,8 @@ class AsyncKagiClient(WebSearchProvider):
         params: dict[str, Any] = {"q": query, "limit": max_results, **kwargs}
 
         url = f"{self.base_url}/search"
-        data = await anyenv.get_json(url, params=params, headers=self.headers, return_type=dict)
+        session = await self._session()
+        data = await session.get_json(url, params=params, headers=self.headers, return_type=dict)
 
         # Filter to search results (t=0), excluding related searches (t=1)
         results = [
@@ -137,7 +137,8 @@ class AsyncKagiClient(WebSearchProvider):
             params["target_language"] = target_language
 
         endpoint = f"{self.base_url}/summarize"
-        data = await anyenv.get_json(
+        session = await self._session()
+        data = await session.get_json(
             endpoint, params=params, headers=self.headers, return_type=dict
         )
         return data.get("data", {}).get("output", "")
